@@ -1,20 +1,20 @@
-# hanwuji-clj-proj
+# hanwu-proj
 
 这个仓库统一整理异构 AI 测试与建模项目。当前以寒武纪为主，后续摩尔线程等平台按同一目录和脚本命名接入。
 
-结构规范见 [docs/repo_structure.md](/home/o_mabin/hanwuji-clj-proj/docs/repo_structure.md)。
+结构规范见 [docs/repo_structure.md](/home/o_mabin/hanwu-proj/docs/repo_structure.md)。
 
 ## 项目总览
 
-- [projects/operators/communication](/home/o_mabin/hanwuji-clj-proj/projects/operators/communication)：通信算子建模与验证。
-- [projects/operators/memory](/home/o_mabin/hanwuji-clj-proj/projects/operators/memory)：存储类算子建模与验证。
-- [projects/operators/compute](/home/o_mabin/hanwuji-clj-proj/projects/operators/compute)：计算类算子建模与验证。
-- [projects/training/time-modeling](/home/o_mabin/hanwuji-clj-proj/projects/training/time-modeling)：训练时间建模、训练 smoke、训练 Dashboard。
-- [projects/inference/time-modeling](/home/o_mabin/hanwuji-clj-proj/projects/inference/time-modeling)：推理时间建模、推理 smoke、推理 Dashboard。
-- [projects/indicators/1.2-runtime-validation](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation)：指标 1.2 运行验证。
-- [projects/indicators/1.3-execution-model](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model)：指标 1.3 处理模型输出验证。
+- [projects/operators/communication](/home/o_mabin/hanwu-proj/projects/operators/communication)：通信算子建模与验证。
+- [projects/operators/memory](/home/o_mabin/hanwu-proj/projects/operators/memory)：存储类算子建模与验证。
+- [projects/operators/compute](/home/o_mabin/hanwu-proj/projects/operators/compute)：计算类算子建模与验证。
+- [projects/training/time-modeling](/home/o_mabin/hanwu-proj/projects/training/time-modeling)：训练时间建模、训练 smoke、训练 Dashboard。
+- [projects/inference/time-modeling](/home/o_mabin/hanwu-proj/projects/inference/time-modeling)：推理时间建模、推理 smoke、推理 Dashboard。
+- [projects/indicators/1.2-runtime-validation](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation)：指标 1.2 运行验证。
+- [projects/indicators/1.3-execution-model](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model)：指标 1.3 处理模型输出验证。
 
-历史汇总文档保存在 [docs/history](/home/o_mabin/hanwuji-clj-proj/docs/history)。
+历史汇总文档保存在 [docs/history](/home/o_mabin/hanwu-proj/docs/history)。
 
 ## 统一入口
 

@@ -55,4 +55,7 @@ cleanup_container_dashboard "$MVP_DASHBOARD_ENV_CONTAINER"
 cleanup_port "$MVP_DASHBOARD_PORT"
 
 cd "$ROOT"
+echo "Starting inference dashboard: http://${MVP_DASHBOARD_HOST}:${MVP_DASHBOARD_PORT}"
+echo "  config: $MVP_DASHBOARD_CONFIG"
+echo "  output root: $MVP_DASHBOARD_OUTPUT_ROOT"
 python3 mvp_dashboard.py

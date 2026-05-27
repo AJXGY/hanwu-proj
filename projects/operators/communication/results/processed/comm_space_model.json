@@ -24,51 +24,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.022836
+          "latency_ms": 0.023749
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.02278
+          "latency_ms": 0.021838
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.025606
+          "latency_ms": 0.021884
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.030598
+          "latency_ms": 0.029563
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.032303
+          "latency_ms": 0.033732
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.055436
+          "latency_ms": 0.05284899999999999
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.127779
+          "latency_ms": 0.13364099999999998
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.26181
+          "latency_ms": 0.259743
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.343608
+          "latency_ms": 0.34393
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.5706720000000001
+          "latency_ms": 0.568923
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 1.03108
+          "latency_ms": 1.030201
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 2.507524
+          "latency_ms": 2.513021
         }
       ]
     },
@@ -78,51 +78,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.062583
+          "latency_ms": 0.051119
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.05246
+          "latency_ms": 0.051177999999999994
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.051463
+          "latency_ms": 0.050470999999999995
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.050194
+          "latency_ms": 0.050381999999999996
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.057238
+          "latency_ms": 0.055137
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.07001099999999999
+          "latency_ms": 0.069728
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.12282599999999999
+          "latency_ms": 0.121639
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.27736500000000003
+          "latency_ms": 0.277051
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.356983
+          "latency_ms": 0.358968
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.591457
+          "latency_ms": 0.588877
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 1.052667
+          "latency_ms": 1.052225
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 2.559848
+          "latency_ms": 2.5343470000000003
         }
       ]
     },
@@ -132,51 +132,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.02465
+          "latency_ms": 0.025465
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.023359
+          "latency_ms": 0.025311
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.024007
+          "latency_ms": 0.023138000000000002
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.023439
+          "latency_ms": 0.02173
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.030767
+          "latency_ms": 0.029059
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.042737000000000004
+          "latency_ms": 0.039084
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.07006799999999999
+          "latency_ms": 0.06945
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.148907
+          "latency_ms": 0.14868199999999998
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.190578
+          "latency_ms": 0.188351
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.305616
+          "latency_ms": 0.30876299999999995
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 0.5437759999999999
+          "latency_ms": 0.543571
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 1.2992380000000001
+          "latency_ms": 1.2987149999999998
         }
       ]
     },
@@ -186,51 +186,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.06476699999999999
+          "latency_ms": 0.06278399999999999
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.06546500000000001
+          "latency_ms": 0.062352
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.053869
+          "latency_ms": 0.061786
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.054329
+          "latency_ms": 0.061579
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.056095
+          "latency_ms": 0.054317
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.062049999999999994
+          "latency_ms": 0.058897
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.088479
+          "latency_ms": 0.089041
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.164935
+          "latency_ms": 0.160945
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.205607
+          "latency_ms": 0.201316
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.321457
+          "latency_ms": 0.318424
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 0.55591
+          "latency_ms": 0.555132
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 1.2912270000000001
+          "latency_ms": 1.288315
         }
       ]
     },
@@ -240,51 +240,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.022378
+          "latency_ms": 0.023044000000000002
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.025996
+          "latency_ms": 0.027460000000000002
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.023911
+          "latency_ms": 0.026640999999999998
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.022231
+          "latency_ms": 0.026569
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.030082
+          "latency_ms": 0.030481
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.042033
+          "latency_ms": 0.042731000000000005
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.093045
+          "latency_ms": 0.09443800000000001
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.241388
+          "latency_ms": 0.237292
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.27134199999999997
+          "latency_ms": 0.26974000000000004
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.437933
+          "latency_ms": 0.435873
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 0.731927
+          "latency_ms": 0.730136
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 1.656653
+          "latency_ms": 1.655632
         }
       ]
     },
@@ -294,51 +294,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.029698
+          "latency_ms": 0.022193
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.022308
+          "latency_ms": 0.022054999999999998
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.022363
+          "latency_ms": 0.021593
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.022273
+          "latency_ms": 0.023361
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.030431
+          "latency_ms": 0.029693999999999998
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.045714
+          "latency_ms": 0.045446
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.102717
+          "latency_ms": 0.10088599999999999
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.25237899999999996
+          "latency_ms": 0.250956
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.32541699999999996
+          "latency_ms": 0.321887
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.548447
+          "latency_ms": 0.549381
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 0.9923719999999999
+          "latency_ms": 0.993009
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 2.4099690000000002
+          "latency_ms": 2.409507
         }
       ]
     },
@@ -348,51 +348,51 @@
       "calibration_points": [
         {
           "message_bytes": 1024,
-          "latency_ms": 0.022616
+          "latency_ms": 0.021782
         },
         {
           "message_bytes": 4096,
-          "latency_ms": 0.022346
+          "latency_ms": 0.022459
         },
         {
           "message_bytes": 16384,
-          "latency_ms": 0.022547
+          "latency_ms": 0.022734
         },
         {
           "message_bytes": 65536,
-          "latency_ms": 0.026285
+          "latency_ms": 0.022376999999999998
         },
         {
           "message_bytes": 262144,
-          "latency_ms": 0.030387
+          "latency_ms": 0.030694
         },
         {
           "message_bytes": 1048576,
-          "latency_ms": 0.046329
+          "latency_ms": 0.046415
         },
         {
           "message_bytes": 4194304,
-          "latency_ms": 0.109242
+          "latency_ms": 0.108455
         },
         {
           "message_bytes": 12582912,
-          "latency_ms": 0.255374
+          "latency_ms": 0.25806999999999997
         },
         {
           "message_bytes": 16777216,
-          "latency_ms": 0.333563
+          "latency_ms": 0.329409
         },
         {
           "message_bytes": 29360128,
-          "latency_ms": 0.554475
+          "latency_ms": 0.550375
         },
         {
           "message_bytes": 54525952,
-          "latency_ms": 1.0011889999999999
+          "latency_ms": 0.998462
         },
         {
           "message_bytes": 134217728,
-          "latency_ms": 2.41599
+          "latency_ms": 2.4173020000000003
         }
       ]
     }

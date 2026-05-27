@@ -13,6 +13,11 @@ MICROBATCH_COUNT="${MICROBATCH_COUNT:-1}"
 MASTER_ADDR="${MASTER_ADDR:-127.0.0.1}"
 MASTER_PORT="${MASTER_PORT:-29501}"
 
+echo "Starting TP two-card training validation in Docker..."
+echo "  model: $HOST_MODEL_DIR"
+echo "  output: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
+echo "  master: $MASTER_ADDR:$MASTER_PORT"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -31,6 +36,7 @@ docker run --rm \
   "$IMAGE" \
   bash -lc "
     source /torch/venv3/pytorch/bin/activate && \
+    echo '[train] Running two-card tensor-parallel validation...' && \
     cd /workspace && \
     python -m torch.distributed.run --nproc_per_node 2 \
       --master_addr '$MASTER_ADDR' \

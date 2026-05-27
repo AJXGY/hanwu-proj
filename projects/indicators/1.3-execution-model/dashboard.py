@@ -118,7 +118,6 @@ def default_payload() -> dict[str, Any]:
         "physical_devices": "0",
         "world_size": 1,
         "tp_size": 1,
-        "pp_size": 1,
         "microbatch_count": 2,
         "microbatch_size": 1,
         "sequence_length": 16,
@@ -140,13 +139,13 @@ def inference_dual_preset() -> dict[str, Any]:
 
 def training_single_preset() -> dict[str, Any]:
     payload = default_payload()
-    payload.update({"task": "training", "scale": "single", "physical_devices": "0", "pp_size": 1, "microbatch_count": 2})
+    payload.update({"task": "training", "scale": "single", "physical_devices": "0", "world_size": 1, "tp_size": 1, "microbatch_count": 2})
     return payload
 
 
 def training_dual_preset() -> dict[str, Any]:
     payload = default_payload()
-    payload.update({"task": "training", "scale": "dual", "physical_devices": "0,1", "pp_size": 2, "microbatch_count": 2})
+    payload.update({"task": "training", "scale": "dual", "physical_devices": "0,1", "world_size": 2, "tp_size": 2, "microbatch_count": 2})
     return payload
 
 
@@ -162,7 +161,6 @@ def normalize_payload(raw_payload: dict[str, Any]) -> dict[str, Any]:
     payload["physical_devices"] = str(payload["physical_devices"]).strip()
     payload["world_size"] = int(payload["world_size"])
     payload["tp_size"] = int(payload["tp_size"])
-    payload["pp_size"] = int(payload["pp_size"])
     payload["microbatch_count"] = int(payload["microbatch_count"])
     payload["microbatch_size"] = int(payload["microbatch_size"])
     payload["sequence_length"] = int(payload["sequence_length"])
@@ -218,8 +216,12 @@ def build_command(run_id: str, payload: dict[str, Any]) -> tuple[list[str], Path
             "/deps/train",
             "--model-path",
             "/model",
-            "--pp-size",
-            str(payload["pp_size"]),
+            "--parallel-mode",
+            "tp" if payload["scale"] == "dual" else "single",
+            "--world-size",
+            str(payload["world_size"]),
+            "--tp-size",
+            str(payload["tp_size"]),
             "--microbatch-count",
             str(payload["microbatch_count"]),
             "--microbatch-size",

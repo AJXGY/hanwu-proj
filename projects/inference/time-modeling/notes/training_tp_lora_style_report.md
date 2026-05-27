@@ -63,8 +63,8 @@ Key result:
 
 Output artifacts:
 
-- `hanwuji-clj-proj/tmp_lora_style_tp2_mlu/report.json`
-- `hanwuji-clj-proj/tmp_lora_style_tp2_mlu/report.md`
+- `hanwu-proj/tmp_lora_style_tp2_mlu/report.json`
+- `hanwu-proj/tmp_lora_style_tp2_mlu/report.md`
 
 ## Rank Placement
 

@@ -11,6 +11,11 @@ PROMPT="${PROMPT:-alpha alpha alpha alpha alpha alpha alpha alpha}"
 MASTER_ADDR="${MASTER_ADDR:-127.0.0.1}"
 MASTER_PORT="${MASTER_PORT:-29502}"
 
+echo "Starting TP two-card inference validation in Docker..."
+echo "  model: $HOST_MODEL_DIR"
+echo "  output: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
+echo "  master: $MASTER_ADDR:$MASTER_PORT"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -27,6 +32,8 @@ docker run --rm \
   -v /data:/data \
   "$IMAGE" \
   bash -lc "
+    source /torch/venv3/pytorch_infer/bin/activate && \
+    echo '[infer] Running two-card tensor-parallel validation...' && \
     cd /workspace && \
     python -m torch.distributed.run --nproc_per_node 2 \
       --master_addr '$MASTER_ADDR' \
@@ -50,5 +57,5 @@ docker run --rm \
       --output-dir '$OUTPUT_DIR'
   "
 
-echo "Smoke report: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
+echo "TP two-card inference report: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
 echo "Model path: $HOST_MODEL_DIR"

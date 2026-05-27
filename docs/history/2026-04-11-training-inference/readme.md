@@ -65,7 +65,7 @@ python mvp_dashboard.py
 直接运行：
 
 ```bash
-cd /home/o_mabin/hanwuji-clj-proj/projects/inference/time-modeling
+cd /home/o_mabin/hanwu-proj/projects/inference/time-modeling
 bash scripts/run_cambricon_pp_smoke.sh
 ```
 

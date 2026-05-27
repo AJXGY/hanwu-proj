@@ -8,11 +8,13 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build Cambricon training execution model artifacts"
+        description="Build Cambricon TP training execution model artifacts"
     )
     parser.add_argument("--train-repo", required=True)
     parser.add_argument("--model-path", required=True)
-    parser.add_argument("--pp-size", type=int, choices=[1, 2], default=1)
+    parser.add_argument("--parallel-mode", choices=["single", "tp"], default="single")
+    parser.add_argument("--world-size", type=int, default=1)
+    parser.add_argument("--tp-size", type=int, default=1)
     parser.add_argument("--microbatch-count", type=int, default=2)
     parser.add_argument("--microbatch-size", type=int, default=1)
     parser.add_argument("--sequence-length", type=int, default=16)
@@ -24,12 +26,17 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def parse_physical_devices(raw_value: str) -> list[int]:
+    devices = [int(item.strip()) for item in raw_value.split(",") if item.strip()]
+    return devices or [0]
+
+
 def render_svg(nodes: list[dict], edges: list[tuple[str, str]], title: str) -> str:
-    width = 1640
+    width = max(1640, 260 + len(nodes) * 170)
     height = 500
     positions = {}
     for idx, node in enumerate(nodes):
-        positions[node["id"]] = (130 + idx * 190, 120 + node.get("lane", 0) * 110)
+        positions[node["id"]] = (130 + idx * 170, 110 + node.get("lane", 0) * 105)
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="#ffffff"/>',
@@ -48,8 +55,8 @@ def render_svg(nodes: list[dict], edges: list[tuple[str, str]], title: str) -> s
         fill = "#dbeafe" if kind == "compute" else "#fee2e2" if kind == "comm" else "#ecfccb"
         lines.extend(
             [
-                f'<rect x="{x - 70}" y="{y - 34}" width="140" height="68" rx="18" fill="{fill}" stroke="#1f2937" stroke-width="2"/>',
-                f'<text x="{x}" y="{y - 6}" text-anchor="middle" font-size="16" font-family="sans-serif" fill="#111827">{node["label"]}</text>',
+                f'<rect x="{x - 70}" y="{y - 34}" width="140" height="68" rx="12" fill="{fill}" stroke="#1f2937" stroke-width="2"/>',
+                f'<text x="{x}" y="{y - 6}" text-anchor="middle" font-size="15" font-family="sans-serif" fill="#111827">{node["label"]}</text>',
                 f'<text x="{x}" y="{y + 16}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#475569">{node.get("sub", "")}</text>',
             ]
         )
@@ -57,110 +64,126 @@ def render_svg(nodes: list[dict], edges: list[tuple[str, str]], title: str) -> s
     return "\n".join(lines)
 
 
+def build_dag(args: argparse.Namespace, total_layers: int, parallel_mode: str) -> tuple[list[dict], list[tuple[str, str]]]:
+    nodes = [{"id": "cpu_load", "label": "CPU Data", "sub": "batch assemble", "lane": 0, "kind": "cpu"}]
+    edges: list[tuple[str, str]] = []
+    previous_tail = "cpu_load"
+    for microbatch_idx in range(args.microbatch_count):
+        forward_id = f"mb{microbatch_idx}_forward"
+        nodes.append(
+            {
+                "id": forward_id,
+                "label": f"MB{microbatch_idx} Forward",
+                "sub": f"{parallel_mode.upper()} layers 0-{total_layers - 1}",
+                "lane": 1,
+                "kind": "compute",
+            }
+        )
+        edges.append((previous_tail, forward_id))
+        previous_tail = forward_id
+        if parallel_mode == "tp":
+            forward_comm_id = f"mb{microbatch_idx}_forward_sync"
+            nodes.append(
+                {
+                    "id": forward_comm_id,
+                    "label": "TP Sync",
+                    "sub": "collective activations",
+                    "lane": 2,
+                    "kind": "comm",
+                }
+            )
+            edges.append((previous_tail, forward_comm_id))
+            previous_tail = forward_comm_id
+        backward_id = f"mb{microbatch_idx}_backward"
+        nodes.append(
+            {
+                "id": backward_id,
+                "label": f"MB{microbatch_idx} Backward",
+                "sub": "adapter gradients",
+                "lane": 1,
+                "kind": "compute",
+            }
+        )
+        edges.append((previous_tail, backward_id))
+        previous_tail = backward_id
+        if parallel_mode == "tp":
+            backward_comm_id = f"mb{microbatch_idx}_grad_sync"
+            nodes.append(
+                {
+                    "id": backward_comm_id,
+                    "label": "Grad Sync",
+                    "sub": "TP all-reduce",
+                    "lane": 2,
+                    "kind": "comm",
+                }
+            )
+            edges.append((previous_tail, backward_comm_id))
+            previous_tail = backward_comm_id
+    nodes.append({"id": "optimizer", "label": "Optimizer", "sub": "adapter parameters", "lane": 1, "kind": "compute"})
+    edges.append((previous_tail, "optimizer"))
+    nodes.append({"id": "checkpoint", "label": "Checkpoint", "sub": "save artifacts", "lane": 0, "kind": "cpu"})
+    edges.append(("optimizer", "checkpoint"))
+    return nodes, edges
+
+
 def main() -> None:
     args = parse_args()
     train_repo = Path(args.train_repo).expanduser().resolve()
     sys.path.insert(0, str(train_repo / "src"))
     from transformers import AutoConfig
-    from train0411_clj.train_pipeline_mvp import stage_layer_range
 
     output_dir = Path(args.output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     model_config = AutoConfig.from_pretrained(args.model_path)
     total_layers = int(getattr(model_config, "num_hidden_layers", 0))
-    physical_devices = [int(item.strip()) for item in args.physical_devices.split(",") if item.strip()]
-
-    stage_ranges = []
-    for stage_index in range(args.pp_size):
-        start, end = stage_layer_range(total_layers, stage_index, args.pp_size)
-        stage_ranges.append(
-            {
-                "stage_index": stage_index,
-                "physical_device": physical_devices[stage_index],
-                "layer_range": [start, end - 1],
-                "layer_count": end - start,
-            }
-        )
-
-    nodes = [{"id": "cpu_load", "label": "CPU 数据准备", "sub": "batch assemble", "lane": 0, "kind": "cpu"}]
-    edges: list[tuple[str, str]] = []
-    previous_tail = "cpu_load"
-    for microbatch_idx in range(args.microbatch_count):
-        if args.pp_size == 1:
-            node_id = f"mb{microbatch_idx}_stage0"
-            nodes.append(
-                {
-                    "id": node_id,
-                    "label": f"MB{microbatch_idx} Backbone Forward",
-                    "sub": f"frozen layers 0-{total_layers - 1}",
-                    "lane": 1,
-                    "kind": "compute",
-                }
+    physical_devices = parse_physical_devices(args.physical_devices)
+    parallel_mode = "tp" if args.parallel_mode == "tp" else "single"
+    world_size = max(1, int(args.world_size))
+    tp_size = max(1, int(args.tp_size))
+    if parallel_mode == "tp":
+        world_size = max(world_size, tp_size, min(len(physical_devices), tp_size))
+        if tp_size < 2:
+            raise RuntimeError("parallel-mode=tp requires tp-size >= 2")
+        if len(physical_devices) < tp_size:
+            raise RuntimeError(
+                f"tp_size={tp_size} requires at least {tp_size} physical devices"
             )
-            edges.append((previous_tail, node_id))
-            previous_tail = node_id
-        else:
-            s0_id = f"mb{microbatch_idx}_stage0"
-            s1_id = f"mb{microbatch_idx}_stage1"
-            comm_id = f"mb{microbatch_idx}_comm"
-            nodes.extend(
-                [
-                    {
-                        "id": s0_id,
-                        "label": f"MB{microbatch_idx} Stage0 Forward",
-                        "sub": f"frozen layers {stage_ranges[0]['layer_range'][0]}-{stage_ranges[0]['layer_range'][1]}",
-                        "lane": 1,
-                        "kind": "compute",
-                    },
-                    {
-                        "id": comm_id,
-                        "label": "Stage 传输",
-                        "sub": "hidden_states",
-                        "lane": 2,
-                        "kind": "comm",
-                    },
-                    {
-                        "id": s1_id,
-                        "label": f"MB{microbatch_idx} Stage1 + Adapter",
-                        "sub": f"frozen layers {stage_ranges[1]['layer_range'][0]}-{stage_ranges[1]['layer_range'][1]} + low-rank head",
-                        "lane": 3,
-                        "kind": "compute",
-                    },
-                ]
-            )
-            edges.extend([(previous_tail, s0_id), (s0_id, comm_id), (comm_id, s1_id)])
-            previous_tail = s1_id
-    nodes.append({"id": "optimizer", "label": "Optimizer Step", "sub": "adapter parameters only", "lane": 2, "kind": "compute"})
-    edges.append((previous_tail, "optimizer"))
-    nodes.append({"id": "checkpoint", "label": "Checkpoint", "sub": "save artifacts", "lane": 0, "kind": "cpu"})
-    edges.append(("optimizer", "checkpoint"))
+    else:
+        world_size = 1
+        tp_size = 1
 
+    nodes, edges = build_dag(args, total_layers, parallel_mode)
+    tensor_parallel_partitioning = [
+        {
+            "rank": rank,
+            "physical_device": physical_devices[rank],
+            "tp_size": tp_size,
+            "layer_range": [0, total_layers - 1],
+            "assignment": (
+                "full training graph"
+                if parallel_mode == "single"
+                else f"tensor-parallel shard {rank}/{tp_size} for attention, MLP, and adapter update"
+            ),
+        }
+        for rank in range(tp_size)
+    ]
     resource_mapping = {
         "cpu_roles": [
             "dataset / batch assembly",
             "launch orchestration",
             "checkpoint metadata save",
         ],
-        "npu_roles": [
-            {
-                "stage_index": item["stage_index"],
-                "physical_device": item["physical_device"],
-                "assignment": (
-                    "frozen backbone forward + adapter update"
-                    if args.pp_size == 1
-                    else f"pipeline stage {item['stage_index']} frozen backbone"
-                ),
-            }
-            for item in stage_ranges
-        ],
+        "npu_roles": tensor_parallel_partitioning,
     }
     execution_logic = {
-        "parallel_mode": "single_stage" if args.pp_size == 1 else "pipeline_parallel",
+        "parallel_mode": parallel_mode,
+        "world_size": world_size,
+        "tp_size": tp_size,
         "microbatch_count": args.microbatch_count,
         "microbatch_logic": (
-            f"{args.microbatch_count} microbatches execute serially on one stage"
-            if args.pp_size == 1
-            else f"{args.microbatch_count} microbatches flow across {args.pp_size} pipeline stages"
+            f"{args.microbatch_count} microbatches execute serially on one device"
+            if parallel_mode == "single"
+            else f"{args.microbatch_count} microbatches execute with tensor-parallel synchronization on each step"
         ),
         "training_mode": "lora_style_adapter",
         "backbone_frozen": True,
@@ -188,7 +211,8 @@ def main() -> None:
             "num_labels": args.adapter_num_labels,
         },
         "resource_mapping": resource_mapping,
-        "stage_partitioning": stage_ranges,
+        "tensor_parallel_partitioning": tensor_parallel_partitioning,
+        "stage_partitioning": [],
         "execution_logic": execution_logic,
         "dag": {"nodes": nodes, "edges": edges},
         "artifacts": {
@@ -205,13 +229,13 @@ def main() -> None:
         encoding="utf-8",
     )
     (output_dir / "execution_dag.svg").write_text(
-        render_svg(nodes, edges, "Training Execution DAG"),
+        render_svg(nodes, edges, "Training TP Execution DAG"),
         encoding="utf-8",
     )
-    index_html = f"""<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"/><title>Training Model Structure</title></head>
+    index_html = """<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><title>Training TP Model Structure</title></head>
 <body>
-<h1>Training Model Structure</h1>
+<h1>Training TP Model Structure</h1>
 <p><a href="execution_model.json">execution_model.json</a></p>
 <p><a href="execution_dag.svg">execution_dag.svg</a></p>
 <img src="execution_dag.svg" style="max-width:100%;border:1px solid #ddd"/>
@@ -220,8 +244,10 @@ def main() -> None:
     summary = {
         "task": "training_model_structure",
         "success": True,
-        "pp_size": args.pp_size,
-        "physical_devices": physical_devices,
+        "parallel_mode": parallel_mode,
+        "world_size": world_size,
+        "tp_size": tp_size,
+        "physical_devices": physical_devices[:tp_size],
         "microbatch_count": args.microbatch_count,
         "execution_model_path": str(output_dir / "execution_model.json"),
         "dag_svg_path": str(output_dir / "execution_dag.svg"),

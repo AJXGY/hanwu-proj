@@ -99,7 +99,8 @@ def default_payload() -> dict[str, Any]:
         "benchmark_repeat": 1,
         "profile_repeat": 1,
         "physical_devices": "0",
-        "pp_size": 1,
+        "world_size": 1,
+        "tp_size": 1,
         "microbatch_count": 2,
         "microbatch_size": 1,
         "sequence_length": 32,
@@ -136,7 +137,8 @@ def train_single_preset() -> dict[str, Any]:
             "task": "training",
             "scale": "single",
             "physical_devices": "0",
-            "pp_size": 1,
+            "world_size": 1,
+            "tp_size": 1,
             "microbatch_count": 2,
             "sequence_length": 16,
             "iterations": 3,
@@ -153,7 +155,8 @@ def train_dual_preset() -> dict[str, Any]:
             "task": "training",
             "scale": "dual",
             "physical_devices": "0,1",
-            "pp_size": 2,
+            "world_size": 2,
+            "tp_size": 2,
             "microbatch_count": 2,
             "sequence_length": 16,
             "iterations": 3,
@@ -179,7 +182,8 @@ def normalize_payload(raw_payload: dict[str, Any]) -> dict[str, Any]:
     payload["warmup"] = int(payload["warmup"])
     payload["benchmark_repeat"] = int(payload["benchmark_repeat"])
     payload["profile_repeat"] = int(payload["profile_repeat"])
-    payload["pp_size"] = int(payload["pp_size"])
+    payload["world_size"] = int(payload["world_size"])
+    payload["tp_size"] = int(payload["tp_size"])
     payload["microbatch_count"] = int(payload["microbatch_count"])
     payload["microbatch_size"] = int(payload["microbatch_size"])
     payload["sequence_length"] = int(payload["sequence_length"])
@@ -210,6 +214,7 @@ def build_runner_command(run_id: str, payload: dict[str, Any]) -> tuple[list[str
         "source /torch/venv3/pytorch/bin/activate",
         "mkdir -p /workspace/reports/runs/inference /workspace/reports/runs/training",
     ]
+    adapter_command: list[str] | None = None
     if payload["task"] == "inference":
         python_command = [
             "python3",
@@ -248,11 +253,21 @@ def build_runner_command(run_id: str, payload: dict[str, Any]) -> tuple[list[str
             workspace_output_dir,
         ]
     else:
+        scale_is_dual = payload["scale"] == "dual"
         python_command = [
             "python3",
-            "/workspace/train_task_runner.py",
-            "--train-repo",
-            "/deps/train",
+            "-m",
+            "torch.distributed.run",
+            "--standalone",
+            "--nproc_per_node",
+            str(payload["tp_size"]),
+            "/deps/train/torch_train_tp_mvp.py",
+        ] if scale_is_dual else [
+            "python3",
+            "/deps/train/torch_train_tp_mvp.py",
+        ]
+        python_command.extend(
+            [
             "--model-path",
             "/model",
             "--dtype",
@@ -261,26 +276,54 @@ def build_runner_command(run_id: str, payload: dict[str, Any]) -> tuple[list[str
             "mlu:0",
             "--physical-devices",
             payload["physical_devices"],
-            "--pp-size",
-            str(payload["pp_size"]),
+            "--parallel-mode",
+            "tp" if scale_is_dual else "single",
+            "--world-size",
+            str(payload["world_size"]),
+            "--tp-size",
+            str(payload["tp_size"]),
+            "--nproc-per-node",
+            str(payload["tp_size"] if scale_is_dual else 1),
             "--microbatch-count",
             str(payload["microbatch_count"]),
             "--microbatch-size",
             str(payload["microbatch_size"]),
             "--sequence-length",
             str(payload["sequence_length"]),
-            "--iterations",
-            str(payload["iterations"]),
             "--optimizer-type",
             payload["optimizer_type"],
+            "--warmup",
+            str(payload["warmup"]),
+            "--benchmark-repeat",
+            str(payload["iterations"]),
+            "--profile-repeat",
+            str(payload["profile_repeat"]),
+            "--estimate-mode",
+            "online",
+            "--train-config-path",
+            "/deps/train/configs/train_config.yaml",
+            "--profile-db-path",
+            "/deps/train/database/train_component_profile_tp.jsonl",
             "--output-dir",
             workspace_output_dir,
-        ]
+            ]
+        )
         if payload["enable_gradient_checkpointing"]:
             python_command.append("--enable-gradient-checkpointing")
         if payload["optimizer_foreach"]:
             python_command.append("--optimizer-foreach")
-    inner = " && ".join(common_prefix + [shell_join(python_command)])
+        adapter_command = [
+            "python3",
+            "/workspace/train_tp_summary_adapter.py",
+            "--report-path",
+            f"{workspace_output_dir}/report.json",
+            "--output-dir",
+            workspace_output_dir,
+        ]
+    inner_commands = common_prefix + [shell_join(python_command)]
+    if adapter_command:
+        inner_commands.append(shell_join(adapter_command))
+    inner = " && ".join(inner_commands)
     command = [
         "docker",
         "run",

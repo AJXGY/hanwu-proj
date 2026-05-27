@@ -16,7 +16,7 @@
     "network_mode": "host",
     "ipc_mode": "host",
     "project_mounts": [
-      "/home/o_mabin/hanwuji-clj-proj",
+      "/home/o_mabin/hanwu-proj",
       "/home/o_mabin/LLM",
       "/tmp",
       "/data",

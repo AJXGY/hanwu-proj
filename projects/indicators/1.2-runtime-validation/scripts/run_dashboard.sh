@@ -34,4 +34,5 @@ cleanup_port() {
 
 cleanup_port "$PORT"
 cd "$ROOT"
+echo "Starting indicator 1.2 dashboard: http://127.0.0.1:${PORT}"
 python3 dashboard.py

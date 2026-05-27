@@ -11,6 +11,10 @@ OPTIMIZER_TYPE="${OPTIMIZER_TYPE:-sgd}"
 SEQUENCE_LENGTH="${SEQUENCE_LENGTH:-8}"
 MICROBATCH_COUNT="${MICROBATCH_COUNT:-1}"
 
+echo "Starting TP single-card training validation in Docker..."
+echo "  model: $HOST_MODEL_DIR"
+echo "  output: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -29,6 +33,7 @@ docker run --rm \
   "$IMAGE" \
   bash -lc "
     source /torch/venv3/pytorch/bin/activate && \
+    echo '[train] Running single-card TP baseline...' && \
     cd /workspace && \
     python torch_train_tp_mvp.py \
       --model-path '$MODEL_DIR' \

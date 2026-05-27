@@ -38,7 +38,7 @@
 ## 运行方式
 
 ```bash
-cd /home/o_mabin/hanwuji-clj-proj/projects/operators/memory
+cd /home/o_mabin/hanwu-proj/projects/operators/memory
 bash scripts/run_mem_op_space_validation.sh
 ```
 
@@ -57,8 +57,8 @@ bash scripts/run_mem_op_space_validation.sh
 
 最终验证结果见：
 
-- [mem_op_validation_report.csv](/home/o_mabin/hanwuji-clj-proj/projects/operators/memory/results/processed/mem_op_validation_report.csv)
-- [mem_op_validation_overview.png](/home/o_mabin/hanwuji-clj-proj/projects/operators/memory/figure/mem_op_validation_overview.png)
+- [mem_op_validation_report.csv](/home/o_mabin/hanwu-proj/projects/operators/memory/results/processed/mem_op_validation_report.csv)
+- [mem_op_validation_overview.png](/home/o_mabin/hanwu-proj/projects/operators/memory/figure/mem_op_validation_overview.png)
 
 当前 8 组 `operator x scale` 最大验证误差均不超过 `20%`：
 

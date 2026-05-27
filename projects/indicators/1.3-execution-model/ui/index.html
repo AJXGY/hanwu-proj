@@ -57,7 +57,7 @@
       <h1>处理模型输出 Dashboard</h1>
       <div class="sub">
         这套页面面向 `5.1.9 训练任务处理模型输出测试` 和 `5.1.10 推理任务处理模型输出测试`。
-        页面会生成执行模型 JSON、资源映射说明、并行划分关系、microbatch 逻辑说明和 DAG 图。
+        页面会生成执行模型 JSON、资源映射说明、TP 并行划分关系、microbatch 逻辑说明和 DAG 图。
       </div>
       <section class="grid">
         <div class="panel">
@@ -85,10 +85,7 @@
               <label>world_size<input id="world_size" type="number" min="1"/></label>
               <label>tp_size<input id="tp_size" type="number" min="1"/></label>
             </div>
-            <div class="two-col">
-              <label>pp_size<input id="pp_size" type="number" min="1"/></label>
-              <label>microbatch_count<input id="microbatch_count" type="number" min="1"/></label>
-            </div>
+            <label>microbatch_count<input id="microbatch_count" type="number" min="1"/></label>
             <div class="two-col">
               <label>microbatch_size<input id="microbatch_size" type="number" min="1"/></label>
               <label>sequence_length<input id="sequence_length" type="number" min="1"/></label>
@@ -134,7 +131,6 @@
           dtype: document.getElementById("dtype").value,
           world_size: Number(document.getElementById("world_size").value),
           tp_size: Number(document.getElementById("tp_size").value),
-          pp_size: Number(document.getElementById("pp_size").value),
           microbatch_count: Number(document.getElementById("microbatch_count").value),
           microbatch_size: Number(document.getElementById("microbatch_size").value),
           sequence_length: Number(document.getElementById("sequence_length").value)

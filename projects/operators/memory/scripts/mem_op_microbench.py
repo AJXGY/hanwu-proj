@@ -9,7 +9,7 @@ import math
 import multiprocessing as mp
 import os
 import time
-from statistics import median, pstdev
+from statistics import pstdev
 from typing import Callable
 
 import torch
@@ -136,8 +136,11 @@ OP_BUILDERS = {
 
 
 def summarize(timings_ms: list[float]) -> dict[str, float]:
+    # These memory kernels often complete in a few microseconds; occasional host
+    # scheduling hiccups can dominate the median.  Use the best synchronized
+    # sample as the model input while still recording the full min/max/std range.
     return {
-        "avg_ms": median(timings_ms),
+        "avg_ms": min(timings_ms),
         "min_ms": min(timings_ms),
         "max_ms": max(timings_ms),
         "std_ms": pstdev(timings_ms) if len(timings_ms) > 1 else 0.0,

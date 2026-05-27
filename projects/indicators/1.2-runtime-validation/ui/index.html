@@ -198,7 +198,7 @@
         <div class="sub">
           这套页面面向 `5.1.3 推理任务运行测试` 和 `5.1.4 训练任务运行测试`。
           它不做时间预测，而是直接在寒武纪 Docker 镜像里跑真实任务，检查单卡 / 双卡是否能启动、
-          执行、结束，并产出推理结果、训练损失曲线和轻量 checkpoint 验证产物。
+          执行、结束，并产出推理结果和 TP 训练运行验证产物。
         </div>
       </section>
 
@@ -266,12 +266,15 @@
             </div>
             <div class="two-col">
               <label>
-                pp_size
-                <select id="pp_size" name="pp_size">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                </select>
+                world_size
+                <input id="world_size" name="world_size" type="number" min="1" />
               </label>
+              <label>
+                tp_size
+                <input id="tp_size" name="tp_size" type="number" min="1" />
+              </label>
+            </div>
+            <div class="two-col">
               <label>
                 microbatch_count
                 <select id="microbatch_count" name="microbatch_count">
@@ -279,6 +282,10 @@
                   <option value="2">2</option>
                   <option value="4">4</option>
                 </select>
+              </label>
+              <label>
+                profile_repeat
+                <input id="profile_repeat" name="profile_repeat" type="number" min="1" />
               </label>
             </div>
             <div class="two-col">
@@ -361,7 +368,9 @@
           dtype: data.get("dtype"),
           max_new_tokens: Number(data.get("max_new_tokens")),
           iterations: Number(data.get("iterations")),
-          pp_size: Number(data.get("pp_size")),
+          world_size: Number(data.get("world_size")),
+          tp_size: Number(data.get("tp_size")),
+          profile_repeat: Number(data.get("profile_repeat")),
           microbatch_count: Number(data.get("microbatch_count")),
           microbatch_size: Number(data.get("microbatch_size")),
           sequence_length: Number(data.get("sequence_length")),

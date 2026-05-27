@@ -10,6 +10,10 @@ IMAGE="cambricon-base/pytorch:v25.01-torch2.5.0-torchmlu1.24.1-ubuntu22.04-py310
 
 mkdir -p "${ROOT_DIR}/results/raw" "${ROOT_DIR}/results/processed" "${ROOT_DIR}/figure"
 
+echo "Starting official CNCL benchmark pipeline in Docker..."
+echo "  workspace: ${ROOT_DIR}"
+echo "  image: ${IMAGE}"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -26,10 +30,12 @@ docker run --rm \
   "${IMAGE}" \
   bash -lc '
     set -euo pipefail
+    source /torch/venv3/pytorch/bin/activate
     export PATH=/usr/local/neuware/bin:$PATH
     export LD_LIBRARY_PATH=/usr/local/neuware/lib64:$LD_LIBRARY_PATH
     COUNTS="256,1024,4096,16384,65536,262144,1048576,4194304"
     for op in allreduce sendrecv allgather alltoall reducescatter broadcast reduce; do
+      echo "[cncl] Running official benchmark: ${op}"
       /usr/local/neuware/bin/${op} \
         --special_count "${COUNTS}" \
         --threads 2 -l 5 -w 1 > "/workspace/results/raw/${op}_bench.log" 2>&1
@@ -38,6 +44,7 @@ docker run --rm \
     : > results/processed/comm_bench_combined.csv
     first_csv=1
     for op in allreduce sendrecv allgather alltoall reducescatter broadcast reduce; do
+      echo "[cncl] Parsing benchmark log: ${op}"
       case "${op}" in
         allreduce) operator_name="all_reduce" ;;
         sendrecv) operator_name="send_recv" ;;
@@ -58,6 +65,7 @@ docker run --rm \
         tail -n +2 "results/processed/${op}_bench.csv" >> results/processed/comm_bench_combined.csv
       fi
     done
+    echo "[cncl] Generating summary and plots..."
     python scripts/analyze_comm_results.py \
       --input results/processed/comm_bench_combined.csv \
       --summary-output results/processed/comm_model_summary.csv \

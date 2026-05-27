@@ -9,6 +9,10 @@ OUTPUT_DIR="${OUTPUT_DIR:-/workspace/validation_reports/cambricon_tp_single_smok
 TABLE_DB="${TABLE_DB:-/workspace/database/module_profile_table_cambricon_mlu580.jsonl}"
 PROMPT="${PROMPT:-alpha alpha alpha alpha alpha alpha alpha alpha}"
 
+echo "Starting TP single-card inference validation in Docker..."
+echo "  model: $HOST_MODEL_DIR"
+echo "  output: ${OUTPUT_DIR/#\/workspace/$ROOT}/report.json"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -25,6 +29,8 @@ docker run --rm \
   -v /data:/data \
   "$IMAGE" \
   bash -lc "
+    source /torch/venv3/pytorch_infer/bin/activate && \
+    echo '[infer] Running single-card inference validation...' && \
     cd /workspace && \
     python torch_infer_mvp.py \
       --model-path '$MODEL_DIR' \

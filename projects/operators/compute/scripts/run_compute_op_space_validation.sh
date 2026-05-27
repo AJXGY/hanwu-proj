@@ -12,6 +12,10 @@ rm -f "${ROOT_DIR}/results/processed/compute_op_validation_report.csv"
 rm -f "${ROOT_DIR}/figure/compute_op_validation_overview.png"
 rm -f "${ROOT_DIR}/figure/strict/"*.png
 
+echo "Starting compute-intensive operator validation in Docker..."
+echo "  workspace: ${ROOT_DIR}"
+echo "  image: ${IMAGE}"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -28,17 +32,21 @@ docker run --rm \
   "${IMAGE}" \
   bash -lc '
     set -euo pipefail
+    source /torch/venv3/pytorch/bin/activate
     cd /workspace
+    echo "[compute-op] Running microbenchmark..."
     python3 scripts/compute_op_microbench.py \
       --output results/raw/compute_op_bench.csv \
       --dtype fp16 \
       --warmup 2 \
       --repeats 5
+    echo "[compute-op] Building space model..."
     python3 scripts/compute_op_space_tool.py \
       build \
       --input results/raw/compute_op_bench.csv \
       --model-output results/processed/compute_op_space_model.json \
       --target-max-error-pct 20.0
+    echo "[compute-op] Evaluating validation points..."
     python3 scripts/compute_op_space_tool.py \
       evaluate \
       --model results/processed/compute_op_space_model.json \

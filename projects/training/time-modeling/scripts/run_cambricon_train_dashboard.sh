@@ -38,4 +38,5 @@ cleanup_port() {
 cleanup_port "$TRAIN_DASHBOARD_PORT"
 
 cd "$ROOT"
+echo "Starting training dashboard: http://${TRAIN_DASHBOARD_HOST}:${TRAIN_DASHBOARD_PORT}"
 python3 train_dashboard.py

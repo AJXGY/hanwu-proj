@@ -8,6 +8,11 @@ MODEL_PATH="${MODEL_PATH:-/model}"
 TABLE_DB="${TABLE_DB:-/workspace/database/module_profile_table_cambricon_mlu580.jsonl}"
 OUTPUT_DIR="${OUTPUT_DIR:-/workspace/validation_reports/cambricon_profile_rebuild}"
 
+echo "Starting Cambricon inference profile-table rebuild in Docker..."
+echo "  model: $HOST_MODEL_DIR"
+echo "  table: ${TABLE_DB/#\/workspace/$ROOT}"
+echo "  output root: ${OUTPUT_DIR/#\/workspace/$ROOT}"
+
 docker run --rm \
   --privileged \
   --net=host \
@@ -24,8 +29,10 @@ docker run --rm \
   -v /data:/data \
   "$IMAGE" \
   bash -lc "
+    source /torch/venv3/pytorch_infer/bin/activate && \
     cd /workspace && \
     rm -f '$TABLE_DB' && \
+    echo '[profile] Running calibration prompt 0...' && \
     python -m torch.distributed.run --standalone --nproc_per_node 2 torch_infer_mvp.py \
       --model-path '$MODEL_PATH' \
       --prompt 'alpha alpha alpha alpha alpha alpha alpha alpha' \
@@ -43,6 +50,7 @@ docker run --rm \
       --table-db-path '$TABLE_DB' \
       --table-writeback \
       --output-dir '$OUTPUT_DIR/run_0' && \
+    echo '[profile] Running calibration prompt 1...' && \
     python -m torch.distributed.run --standalone --nproc_per_node 2 torch_infer_mvp.py \
       --model-path '$MODEL_PATH' \
       --prompt 'alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha' \
@@ -60,6 +68,7 @@ docker run --rm \
       --table-db-path '$TABLE_DB' \
       --table-writeback \
       --output-dir '$OUTPUT_DIR/run_1' && \
+    echo '[profile] Running calibration prompt 2...' && \
     python -m torch.distributed.run --standalone --nproc_per_node 2 torch_infer_mvp.py \
       --model-path '$MODEL_PATH' \
       --prompt 'explain what a runtime estimator needs to measure .' \

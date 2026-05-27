@@ -14,11 +14,11 @@
 
 ## 目录说明
 
-- [dashboard.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/dashboard.py): 统一 Dashboard 后端
-- [ui/index.html](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/ui/index.html): Dashboard 页面
-- [infer_task_runner.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/infer_task_runner.py): 推理运行验证包装脚本
-- [train_task_runner.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/train_task_runner.py): 训练运行验证脚本
-- [scripts/run_dashboard.sh](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/scripts/run_dashboard.sh): Dashboard 启动脚本
+- [dashboard.py](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/dashboard.py): 统一 Dashboard 后端
+- [ui/index.html](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/ui/index.html): Dashboard 页面
+- [infer_task_runner.py](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/infer_task_runner.py): 推理运行验证包装脚本
+- [train_task_runner.py](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/train_task_runner.py): 训练运行验证脚本
+- [scripts/run_dashboard.sh](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/scripts/run_dashboard.sh): Dashboard 启动脚本
 - `reports/runs/`: 运行结果目录
 
 ## Dashboard
@@ -26,7 +26,7 @@
 启动：
 
 ```bash
-cd /home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation
+cd /home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation
 bash scripts/run_dashboard.sh
 ```
 
@@ -81,15 +81,15 @@ cambricon-base/pytorch:v25.10.0-torch2.7.1-torchmlu1.29.1-ubuntu22.04-py310
 推理：
 
 - 单卡成功：
-  - [c1b1b382/summary.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/inference/c1b1b382/summary.json)
+  - [c1b1b382/summary.json](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/inference/c1b1b382/summary.json)
 - 双卡成功：
-  - [180d4000/summary.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/inference/180d4000/summary.json)
+  - [180d4000/summary.json](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/inference/180d4000/summary.json)
 
 训练：
 
 - 单卡成功：
-  - [8b0e444b/summary.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/8b0e444b/summary.json)
-  - [8b0e444b/loss_curve.svg](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/8b0e444b/loss_curve.svg)
+  - [8b0e444b/summary.json](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/8b0e444b/summary.json)
+  - [8b0e444b/loss_curve.svg](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/8b0e444b/loss_curve.svg)
 - 双卡成功：
-  - [166410aa/summary.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/166410aa/summary.json)
-  - [166410aa/loss_curve.svg](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/166410aa/loss_curve.svg)
+  - [166410aa/summary.json](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/166410aa/summary.json)
+  - [166410aa/loss_curve.svg](/home/o_mabin/hanwu-proj/projects/indicators/1.2-runtime-validation/reports/runs/training_local/166410aa/loss_curve.svg)

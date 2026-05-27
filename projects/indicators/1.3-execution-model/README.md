@@ -16,18 +16,18 @@
 
 ## 主要文件
 
-- [dashboard.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/dashboard.py): 统一 Dashboard 后端
-- [ui/index.html](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/ui/index.html): Dashboard 页面
-- [infer_model_builder.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/infer_model_builder.py): 推理处理模型构建脚本
-- [train_model_builder.py](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/train_model_builder.py): 训练处理模型构建脚本
-- [scripts/run_dashboard.sh](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/scripts/run_dashboard.sh): Dashboard 启动脚本
+- [dashboard.py](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/dashboard.py): 统一 Dashboard 后端
+- [ui/index.html](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/ui/index.html): Dashboard 页面
+- [infer_model_builder.py](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/infer_model_builder.py): 推理处理模型构建脚本
+- [train_model_builder.py](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/train_model_builder.py): 训练处理模型构建脚本
+- [scripts/run_dashboard.sh](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/scripts/run_dashboard.sh): Dashboard 启动脚本
 
 ## Dashboard
 
 启动：
 
 ```bash
-cd /home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model
+cd /home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model
 bash scripts/run_dashboard.sh
 ```
 
@@ -72,26 +72,26 @@ http://127.0.0.1:8253
 生成 4 组处理模型产物：
 
 - 推理单卡：
-  [01e5bf38](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/inference/01e5bf38)
+  [01e5bf38](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/inference/01e5bf38)
 - 推理双卡：
-  [fe2c9aa5](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5)
+  [fe2c9aa5](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5)
 - 训练单卡：
-  [645d804a](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/training/645d804a)
+  [645d804a](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/training/645d804a)
 - 训练双卡：
-  [8b994f49](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49)
+  [8b994f49](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49)
 
 其中可直接查看的关键文件包括：
 
 - 推理执行模型：
-  [execution_model.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/execution_model.json)
+  [execution_model.json](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/execution_model.json)
 - 推理 DAG 图：
-  [execution_dag.svg](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/execution_dag.svg)
+  [execution_dag.svg](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/execution_dag.svg)
 - 推理 graph 可视化：
-  [graph_viz/index.html](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/graph_viz/index.html)
+  [graph_viz/index.html](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/inference/fe2c9aa5/graph_viz/index.html)
 - 训练执行模型：
-  [execution_model.json](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49/execution_model.json)
+  [execution_model.json](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49/execution_model.json)
 - 训练 DAG 图：
-  [execution_dag.svg](/home/o_mabin/hanwuji-clj-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49/execution_dag.svg)
+  [execution_dag.svg](/home/o_mabin/hanwu-proj/projects/indicators/1.3-execution-model/reports/models/training/8b994f49/execution_dag.svg)
 
 ## 验证结论
 
@@ -116,7 +116,8 @@ http://127.0.0.1:8253
 
 训练双卡产物中可看到：
 
-- `parallel_mode = pipeline_parallel`
-- `pp_size = 2`
-- `2 microbatches flow across 2 pipeline stages`
-- `layer_range [0, 15]` 与 `[16, 31]` 的阶段划分
+- `parallel_mode = tp`
+- `world_size = 2`
+- `tp_size = 2`
+- `2 microbatches execute with tensor-parallel synchronization on each step`
+- `tensor_parallel_partitioning` 中的 rank/device 映射

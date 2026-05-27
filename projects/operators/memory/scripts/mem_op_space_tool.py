@@ -368,6 +368,17 @@ def main() -> None:
         write_evaluation_csv(args.summary_output, evaluated)
         write_report_csv(args.report_output, evaluated, model)
         make_plots(args.plot_dir, args.overview_plot, evaluated)
+        failing_rows = [
+            row
+            for row in evaluated
+            if row["point_role"] == "validation" and float(row["error_pct"]) > 20.0
+        ]
+        if failing_rows:
+            failures = ", ".join(
+                f"{row['operator']}/{row['scale']}={float(row['error_pct']):.2f}%"
+                for row in failing_rows
+            )
+            raise SystemExit(f"Validation error exceeds 20%: {failures}")
         return
 
 

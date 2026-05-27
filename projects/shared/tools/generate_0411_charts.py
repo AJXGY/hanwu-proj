@@ -76,7 +76,7 @@ def load_json(path: str) -> dict:
 
 def inference_rows() -> list[dict]:
     tp = load_json(
-        "/home/o_mabin/hanwuji-clj-proj/projects/inference/time-modeling/validation_reports/cambricon_tp2_smoke/report.json"
+        "/home/o_mabin/hanwu-proj/projects/inference/time-modeling/validation_reports/cambricon_tp2_smoke/report.json"
     )
     rows = [
         {
@@ -88,7 +88,7 @@ def inference_rows() -> list[dict]:
     ]
     for name in ["pp1_mb2", "pp2_mb1", "pp2_mb2", "pp2_mb4"]:
         report = load_json(
-            f"/home/o_mabin/hanwuji-clj-proj/projects/inference/time-modeling/validation_reports/cambricon_pp_smoke/{name}/report.json"
+            f"/home/o_mabin/hanwu-proj/projects/inference/time-modeling/validation_reports/cambricon_pp_smoke/{name}/report.json"
         )
         rows.append(
             {
@@ -109,7 +109,7 @@ def training_rows() -> list[dict]:
     ]:
         for name in names:
             report = load_json(
-                f"/home/o_mabin/hanwuji-clj-proj/projects/training/time-modeling/reports/{group}/{name}/report.json"
+                f"/home/o_mabin/hanwu-proj/projects/training/time-modeling/reports/{group}/{name}/report.json"
             )
             rows.append(
                 {

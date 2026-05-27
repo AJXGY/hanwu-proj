@@ -54,7 +54,7 @@
 ## 运行方式
 
 ```bash
-cd /home/o_mabin/hanwuji-clj-proj/projects/operators/compute
+cd /home/o_mabin/hanwu-proj/projects/operators/compute
 bash scripts/run_compute_op_space_validation.sh
 ```
 

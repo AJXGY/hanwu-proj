@@ -5,7 +5,7 @@
 ## 顶层目录
 
 ```text
-hanwuji-clj-proj/
+hanwu-proj/
   README.md
   docs/
     repo_structure.md
