@@ -1,0 +1,8 @@
+__pycache__/
+.ruff_cache/
+.dashboard_runs/
+.cli_runs/
+.graph_cache/
+validation_reports/
+.claude
+.opencode

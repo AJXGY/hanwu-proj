@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Train Dashboard</title>
+    <style>
+      :root {
+        --bg: #f3f0e8;
+        --panel: #fffaf1;
+        --line: #d3c8b2;
+        --text: #1e1a16;
+        --muted: #6e655b;
+        --accent: #1d6b52;
+        --accent-2: #8b3d21;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Noto Sans SC", "Source Han Sans SC", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(29,107,82,0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(139,61,33,0.10), transparent 25%),
+          var(--bg);
+      }
+      .shell {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 28px 20px 48px;
+      }
+      .hero {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 5vw, 58px);
+        line-height: 0.95;
+      }
+      .sub {
+        max-width: 900px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 420px minmax(0, 1fr);
+        gap: 20px;
+      }
+      .panel {
+        background: rgba(255,250,241,0.92);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: 0 12px 36px rgba(39, 26, 14, 0.06);
+        backdrop-filter: blur(8px);
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      .preset-row, .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 700;
+        color: #fff;
+        background: var(--accent);
+      }
+      button.secondary {
+        background: var(--accent-2);
+      }
+      button.ghost {
+        background: #efe7d7;
+        color: var(--text);
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font: inherit;
+        background: #fff;
+        color: var(--text);
+      }
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+      .check input {
+        width: auto;
+        margin: 0;
+      }
+      .status {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: #f0e8d6;
+        color: var(--text);
+        margin-bottom: 14px;
+      }
+      .run-list {
+        display: grid;
+        gap: 10px;
+      }
+      .run-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        background: #fffdf8;
+      }
+      .run-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      pre {
+        margin: 0;
+        padding: 14px;
+        overflow: auto;
+        border-radius: 16px;
+        background: #181512;
+        color: #f8f3ea;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .metric {
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #fffdf8;
+      }
+      .metric .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .metric .value {
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .existing-list {
+        display: grid;
+        gap: 8px;
+      }
+      .existing-item {
+        border: 1px dashed var(--line);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
+        background: rgba(255,255,255,0.65);
+      }
+      @media (max-width: 980px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="eyebrow">Cambricon Train MVP</div>
+        <h1>训练 Dashboard</h1>
+        <div class="sub">
+          这个页面直接调用训练目录里的真实 8B TP 入口。你可以选 `single/tp`、`tp_size`、`microbatch`、
+          `estimate_mode`、`optimizer`，然后在页面里看运行状态、日志和 `report.json`。
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>运行配置</h2>
+          <div class="preset-row" style="margin-bottom: 14px;">
+            <button class="ghost" id="preset-single">套用 single 真实 8B</button>
+            <button class="ghost" id="preset-tp2">套用 tp2 真实 8B</button>
+          </div>
+          <div class="status" id="status-box">页面已就绪。</div>
+          <form id="run-form">
+            <label>
+              宿主机模型目录
+              <input id="host_model_dir" name="host_model_dir" />
+            </label>
+            <label>
+              Docker 镜像
+              <input id="image" name="image" />
+            </label>
+            <div class="two-col">
+              <label>
+                `parallel_mode`
+                <select id="parallel_mode" name="parallel_mode">
+                  <option value="tp">tp</option>
+                  <option value="single">single</option>
+                </select>
+              </label>
+              <label>
+                `tp_size`
+                <select id="tp_size" name="tp_size">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                `world_size`
+                <select id="world_size" name="world_size">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
+              <label>
+                `microbatch_count`
+                <select id="microbatch_count" name="microbatch_count">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="4">4</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                `microbatch_size`
+                <input id="microbatch_size" name="microbatch_size" type="number" min="1" />
+              </label>
+              <label>
+                `sequence_length`
+                <input id="sequence_length" name="sequence_length" type="number" min="1" />
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                `optimizer_type`
+                <select id="optimizer_type" name="optimizer_type">
+                  <option value="sgd">sgd</option>
+                  <option value="adamw">adamw</option>
+                </select>
+              </label>
+              <label>
+                `estimate_mode`
+                <select id="estimate_mode" name="estimate_mode">
+                  <option value="online">online</option>
+                  <option value="table">table</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                `warmup`
+                <input id="warmup" name="warmup" type="number" min="0" />
+              </label>
+              <label>
+                `benchmark_repeat`
+                <input id="benchmark_repeat" name="benchmark_repeat" type="number" min="1" />
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                `profile_repeat`
+                <input id="profile_repeat" name="profile_repeat" type="number" min="1" />
+              </label>
+              <label>
+                `physical_devices`
+                <input id="physical_devices" name="physical_devices" />
+              </label>
+            </div>
+            <label>
+              `profile_db_path`
+              <input id="profile_db_path" name="profile_db_path" />
+            </label>
+            <label>
+              输出根目录
+              <input id="output_root" name="output_root" />
+            </label>
+            <div class="check">
+              <input id="enable_gradient_checkpointing" name="enable_gradient_checkpointing" type="checkbox" />
+              <span>启用 `gradient checkpointing`</span>
+            </div>
+            <div class="check">
+              <input id="optimizer_foreach" name="optimizer_foreach" type="checkbox" />
+              <span>启用 `optimizer_foreach`</span>
+            </div>
+            <div class="check">
+              <input id="write_profile_db" name="write_profile_db" type="checkbox" />
+              <span>写回 JSONL profile</span>
+            </div>
+            <div class="button-row">
+              <button type="submit">启动训练分析</button>
+              <button type="button" class="secondary" id="refresh-runs">刷新状态</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>结果与运行记录</h2>
+          <div class="result-grid" id="result-grid"></div>
+          <pre id="report-view">等待运行结果...</pre>
+          <div style="height: 16px;"></div>
+          <h2>本页发起的运行</h2>
+          <div class="run-list" id="run-list"></div>
+          <div style="height: 16px;"></div>
+          <h2>现有报告</h2>
+          <div class="existing-list" id="existing-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const fields = [
+        "image",
+        "host_model_dir",
+        "parallel_mode",
+        "world_size",
+        "tp_size",
+        "microbatch_count",
+        "microbatch_size",
+        "sequence_length",
+        "optimizer_type",
+        "estimate_mode",
+        "warmup",
+        "benchmark_repeat",
+        "profile_repeat",
+        "physical_devices",
+        "profile_db_path",
+        "output_root",
+      ];
+
+      let presets = {};
+      let activeRunId = null;
+
+      function setStatus(text) {
+        document.getElementById("status-box").textContent = text;
+      }
+
+      function fillForm(payload) {
+        fields.forEach((key) => {
+          const node = document.getElementById(key);
+          if (node && payload[key] !== undefined) {
+            node.value = payload[key];
+          }
+        });
+        document.getElementById("enable_gradient_checkpointing").checked = !!payload.enable_gradient_checkpointing;
+        document.getElementById("optimizer_foreach").checked = !!payload.optimizer_foreach;
+        document.getElementById("write_profile_db").checked = !!payload.write_profile_db;
+      }
+
+      function readForm() {
+        const payload = {};
+        fields.forEach((key) => {
+          payload[key] = document.getElementById(key).value;
+        });
+        payload.enable_gradient_checkpointing = document.getElementById("enable_gradient_checkpointing").checked;
+        payload.optimizer_foreach = document.getElementById("optimizer_foreach").checked;
+        payload.write_profile_db = document.getElementById("write_profile_db").checked;
+        return payload;
+      }
+
+      function renderMetrics(report) {
+        const grid = document.getElementById("result-grid");
+        if (!report) {
+          grid.innerHTML = "";
+          return;
+        }
+        const execution = report.execution || {};
+        const estimate = report.estimate || {};
+        const measured = report.measured || {};
+        const metrics = [
+          ["误差", `${((report.comparison || {}).train_iteration_relative_error_pct ?? report.error_pct ?? 0).toFixed(4)}%`],
+          ["T_real", `${(measured.train_iteration_time_ms ?? 0).toFixed(4)} ms`],
+          ["T_sim", `${(estimate.train_iteration_time_ms ?? 0).toFixed(4)} ms`],
+          ["mode / tp", `${execution.parallel_mode ?? "-"} / ${execution.tp_size ?? "-"}`],
+          ["优化器", `${execution.optimizer_type ?? "-"}`],
+          ["GC", execution.gradient_checkpointing ? "ON" : "OFF"],
+        ];
+        grid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric">
+            <div class="label">${label}</div>
+            <div class="value">${value}</div>
+          </div>
+        `).join("");
+      }
+
+      function renderReport(run) {
+        const reportView = document.getElementById("report-view");
+        if (!run) {
+          reportView.textContent = "没有可展示的运行。";
+          renderMetrics(null);
+          return;
+        }
+        renderMetrics(run.report);
+        reportView.textContent = JSON.stringify(run, null, 2);
+      }
+
+      function renderRuns(runs) {
+        const container = document.getElementById("run-list");
+        if (!runs.length) {
+          container.innerHTML = `<div class="run-card">还没有通过这个页面发起的训练运行。</div>`;
+          return;
+        }
+        container.innerHTML = runs.map((run) => `
+          <div class="run-card">
+            <div><strong>${run.run_id}</strong> · ${run.status}</div>
+            <div class="run-meta">
+              mode=${run.payload.parallel_mode}, tp=${run.payload.tp_size}, mb=${run.payload.microbatch_count},
+              optimizer=${run.payload.optimizer_type},
+              gc=${run.payload.enable_gradient_checkpointing ? "on" : "off"}
+            </div>
+            <div class="button-row" style="margin-top: 10px;">
+              <button class="ghost" data-run-id="${run.run_id}">查看详情</button>
+            </div>
+          </div>
+        `).join("");
+        container.querySelectorAll("button[data-run-id]").forEach((button) => {
+          button.addEventListener("click", () => loadRun(button.dataset.runId));
+        });
+      }
+
+      function renderExisting(reports) {
+        const container = document.getElementById("existing-list");
+        container.innerHTML = reports.map((report) => `
+          <div class="existing-item">
+            <div><strong>${report.parallel_mode ?? "-"}</strong> · tp=${report.tp_size ?? "-"} · mb=${report.microbatch_count ?? "-"} · err=${(report.error_pct ?? 0).toFixed(4)}%</div>
+            <div style="color:#6e655b; margin-top:4px; word-break:break-all;">${report.path}</div>
+          </div>
+        `).join("");
+      }
+
+      async function loadDefaults() {
+        const response = await fetch("/api/defaults");
+        const payload = await response.json();
+        presets = payload.presets || {};
+        fillForm(payload.defaults || {});
+      }
+
+      async function refreshRuns() {
+        const response = await fetch("/api/runs");
+        const payload = await response.json();
+        renderRuns(payload.runs || []);
+        if (activeRunId) {
+          await loadRun(activeRunId, false);
+        }
+      }
+
+      async function loadRun(runId, announce = true) {
+        const response = await fetch(`/api/runs/${runId}`);
+        const payload = await response.json();
+        activeRunId = runId;
+        renderReport(payload);
+        if (announce) {
+          setStatus(`已加载运行 ${runId}。`);
+        }
+      }
+
+      async function refreshExisting() {
+        const response = await fetch("/api/reports");
+        const payload = await response.json();
+        renderExisting(payload.reports || []);
+      }
+
+      document.getElementById("run-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("正在启动训练任务...");
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(readForm()),
+        });
+        const payload = await response.json();
+        activeRunId = payload.run_id;
+        renderReport(payload);
+        setStatus(`运行 ${payload.run_id} 已提交，后台开始执行。`);
+        await refreshRuns();
+      });
+
+      document.getElementById("refresh-runs").addEventListener("click", async () => {
+        setStatus("正在刷新运行状态...");
+        await refreshRuns();
+        await refreshExisting();
+        setStatus("状态已刷新。");
+      });
+
+      document.getElementById("preset-single").addEventListener("click", () => {
+        fillForm(presets.single || {});
+        setStatus("已套用真实 8B 的 single 训练预设。");
+      });
+
+      document.getElementById("preset-tp2").addEventListener("click", () => {
+        fillForm(presets.tp2 || {});
+        setStatus("已套用真实 8B 的 tp2 训练预设。");
+      });
+
+      async function boot() {
+        await loadDefaults();
+        await refreshRuns();
+        await refreshExisting();
+      }
+
+      boot();
+      setInterval(refreshRuns, 4000);
+    </script>
+  </body>
+</html>

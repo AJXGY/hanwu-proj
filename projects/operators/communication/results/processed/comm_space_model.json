@@ -1,0 +1,400 @@
+{
+  "tool_name": "cambricon_comm_response_time_tool",
+  "tool_version": "v1",
+  "device_type": "MLU580",
+  "world_size": 2,
+  "calibration_message_bytes": [
+    1024,
+    4096,
+    16384,
+    65536,
+    262144,
+    1048576,
+    4194304,
+    12582912,
+    16777216,
+    29360128,
+    54525952,
+    134217728
+  ],
+  "operators": {
+    "all_reduce": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.022836
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.02278
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.025606
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.030598
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.032303
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.055436
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.127779
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.26181
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.343608
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.5706720000000001
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 1.03108
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 2.507524
+        }
+      ]
+    },
+    "send_recv": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.062583
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.05246
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.051463
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.050194
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.057238
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.07001099999999999
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.12282599999999999
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.27736500000000003
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.356983
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.591457
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 1.052667
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 2.559848
+        }
+      ]
+    },
+    "all_gather": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.02465
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.023359
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.024007
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.023439
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.030767
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.042737000000000004
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.07006799999999999
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.148907
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.190578
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.305616
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 0.5437759999999999
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 1.2992380000000001
+        }
+      ]
+    },
+    "all_to_all": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.06476699999999999
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.06546500000000001
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.053869
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.054329
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.056095
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.062049999999999994
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.088479
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.164935
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.205607
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.321457
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 0.55591
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 1.2912270000000001
+        }
+      ]
+    },
+    "reduce_scatter": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.022378
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.025996
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.023911
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.022231
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.030082
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.042033
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.093045
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.241388
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.27134199999999997
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.437933
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 0.731927
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 1.656653
+        }
+      ]
+    },
+    "broadcast": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.029698
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.022308
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.022363
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.022273
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.030431
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.045714
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.102717
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.25237899999999996
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.32541699999999996
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.548447
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 0.9923719999999999
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 2.4099690000000002
+        }
+      ]
+    },
+    "reduce": {
+      "interpolation": "linear_axis",
+      "axis": "message_bytes",
+      "calibration_points": [
+        {
+          "message_bytes": 1024,
+          "latency_ms": 0.022616
+        },
+        {
+          "message_bytes": 4096,
+          "latency_ms": 0.022346
+        },
+        {
+          "message_bytes": 16384,
+          "latency_ms": 0.022547
+        },
+        {
+          "message_bytes": 65536,
+          "latency_ms": 0.026285
+        },
+        {
+          "message_bytes": 262144,
+          "latency_ms": 0.030387
+        },
+        {
+          "message_bytes": 1048576,
+          "latency_ms": 0.046329
+        },
+        {
+          "message_bytes": 4194304,
+          "latency_ms": 0.109242
+        },
+        {
+          "message_bytes": 12582912,
+          "latency_ms": 0.255374
+        },
+        {
+          "message_bytes": 16777216,
+          "latency_ms": 0.333563
+        },
+        {
+          "message_bytes": 29360128,
+          "latency_ms": 0.554475
+        },
+        {
+          "message_bytes": 54525952,
+          "latency_ms": 1.0011889999999999
+        },
+        {
+          "message_bytes": 134217728,
+          "latency_ms": 2.41599
+        }
+      ]
+    }
+  }
+}

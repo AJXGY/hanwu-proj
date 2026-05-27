@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Torch 推理分析控制台</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="background-grid"></div>
+  <main class="layout">
+    <section class="hero">
+      <p class="eyebrow">Torch Eager Runtime Model</p>
+      <h1>面向推理时间预测与实测对照的分析控制台</h1>
+      <p class="hero-copy">通过控制面板驱动 `torch_infer_mvp.py`，发起运行任务，并查看 `prefill`、`decode` 与 `request` 的时间如何在 estimate、profile 与 measured wall time 之间展开。</p>
+    </section>
+
+    <section class="panel control-panel">
+      <div class="panel-head">
+          <h2>控制面板</h2>
+          <div class="button-row">
+            <button id="prepare-button" class="ghost-button" type="button">准备环境</button>
+            <button id="stop-env-button" class="ghost-button" type="button">停止环境</button>
+            <button id="run-button" class="primary-button" type="button">启动分析</button>
+          </div>
+      </div>
+      <form id="run-form" class="form-grid">
+        <label class="wide">
+          <span>环境状态</span>
+          <div id="environment-note" class="form-note">Dashboard 启动后会按配置文件自动准备环境；只有环境 ready 时才允许开始估测/实测。</div>
+        </label>
+        <label class="wide">
+          <span>环境配置文件</span>
+          <input name="config_path" type="text" disabled />
+        </label>
+        <label>
+          <span>运行方式 Runner</span>
+          <select name="runner">
+            <option value="docker_run_image">Docker 镜像运行</option>
+            <option value="local_python">本机 Host Python（独立虚拟环境）</option>
+          </select>
+        </label>
+        <label>
+          <span>镜像名 Image name</span>
+          <input name="image_name" type="text" />
+        </label>
+        <label class="wide">
+          <span>本机 Python 环境 Host Python Bin</span>
+          <input name="python_bin" type="text" />
+        </label>
+        <label class="wide">
+          <span>运行说明</span>
+          <div id="runner-note" class="form-note">Docker 模式使用镜像环境；切到本机 Host Python 时会固定使用独立虚拟环境，不依赖当前 shell 激活状态。</div>
+        </label>
+        <label class="wide">
+          <span>模型路径 Model path</span>
+          <input name="model_path" list="model-options" type="text" />
+          <datalist id="model-options"></datalist>
+        </label>
+        <label class="wide">
+          <span>Prompt</span>
+          <textarea name="prompt" rows="5"></textarea>
+        </label>
+        <label>
+          <span>最大新 token 数 Max new tokens</span>
+          <input name="max_new_tokens" type="number" min="1" />
+        </label>
+        <label>
+          <span>Dtype</span>
+          <select name="dtype">
+            <option value="bf16">bf16</option>
+            <option value="fp16">fp16</option>
+          </select>
+        </label>
+        <label>
+          <span>单机几卡 Local Cards</span>
+          <select id="local-gpu-count"></select>
+        </label>
+        <label>
+          <span>部署模式 Deployment</span>
+          <select id="deployment-mode">
+            <option value="single_host">单机</option>
+            <option value="multi_host">跨机</option>
+          </select>
+        </label>
+        <label class="wide">
+          <span>自动推导结果</span>
+          <div id="derived-config-note" class="form-note">将根据本机卡数自动匹配 TP 配置。</div>
+        </label>
+        <details class="advanced-settings wide">
+          <summary>高级并行配置 Distributed Overrides</summary>
+          <div class="advanced-grid">
+            <label>
+              <span>Parallel Mode</span>
+              <select name="parallel_mode">
+                <option value="tp">tp</option>
+                <option value="single">single</option>
+              </select>
+            </label>
+            <label>
+              <span>Physical Devices</span>
+              <input name="physical_devices" type="text" />
+            </label>
+            <label>
+              <span>World Size</span>
+              <input name="world_size" type="number" min="1" />
+            </label>
+            <label>
+              <span>TP Size</span>
+              <input name="tp_size" type="number" min="1" />
+            </label>
+            <label>
+              <span>Nodes</span>
+              <input name="nnodes" type="number" min="1" />
+            </label>
+            <label>
+              <span>Proc / Node</span>
+              <input name="nproc_per_node" type="number" min="1" />
+            </label>
+            <label>
+              <span>Node Rank</span>
+              <input name="node_rank" type="number" min="0" />
+            </label>
+            <label>
+              <span>Master Addr</span>
+              <input name="master_addr" type="text" />
+            </label>
+            <label>
+              <span>Master Port</span>
+              <input name="master_port" type="number" min="1" />
+            </label>
+            <label>
+              <span>Remote Host (SSH)</span>
+              <input name="remote_host" type="text" placeholder="user@host" />
+            </label>
+            <label>
+              <span>Remote SSH Port</span>
+              <input name="remote_ssh_port" type="number" min="1" />
+            </label>
+            <label>
+              <span>Remote Devices</span>
+              <input name="remote_physical_devices" type="text" placeholder="0,1" />
+            </label>
+            <label>
+              <span>Remote Python Bin</span>
+              <input name="remote_python_bin" type="text" placeholder="留空=与本机 Python 一致" />
+            </label>
+            <label>
+              <span>Remote Model Path</span>
+              <input name="remote_model_path" type="text" placeholder="留空=与本机一致" />
+            </label>
+            <label>
+              <span>Remote Container Name</span>
+              <input name="remote_container_name" type="text" placeholder="可选" />
+            </label>
+            <label>
+              <span>Interconnect</span>
+              <select name="interconnect">
+                <option value="ethernet">ethernet</option>
+                <option value="infiniband">infiniband</option>
+                <option value="roce">roce</option>
+                <option value="auto">auto</option>
+              </select>
+            </label>
+            <label>
+              <span>Comm BW GB/s</span>
+              <input name="collective_bandwidth_gbps" type="text" />
+            </label>
+            <label>
+              <span>Comm Latency ms</span>
+              <input name="collective_latency_ms" type="text" />
+            </label>
+            <label>
+              <span>Dist Timeout min</span>
+              <input name="dist_timeout_minutes" type="number" min="1" />
+            </label>
+          </div>
+          <div class="form-note">单机场景会根据上方“单机几卡”自动设置 `parallel_mode`、`physical_devices`、`world_size`、`tp_size` 与 `nproc_per_node`。跨机时只在本页面填一次配置；Dashboard 会先尝试通过 SSH 准备 remote host，再自动拉起 rank1。</div>
+        </details>
+        <label>
+          <span>预热轮数 Warmup</span>
+          <input name="warmup" type="number" min="0" />
+        </label>
+        <label>
+          <span>实测重复次数 Benchmark Repeat</span>
+          <input name="benchmark_repeat" type="number" min="1" />
+        </label>
+        <label>
+          <span>Profiling 重复次数 Profile Repeat</span>
+          <input name="profile_repeat" type="number" min="1" />
+        </label>
+        <label class="toggle-field wide">
+          <span>产物 Artifacts</span>
+          <div class="toggle-row">
+            <input name="generate_graph_viz" type="checkbox" checked />
+            <em>每次运行后生成 graph-viz 产物</em>
+          </div>
+        </label>
+        <label class="toggle-field wide">
+          <span>Estimate Only</span>
+          <div class="toggle-row">
+            <input name="estimate_only" type="checkbox" />
+            <em>仅生成跨 host estimate，不执行 measured/profile 校验。</em>
+          </div>
+        </label>
+        <label>
+          <span>Estimate Mode</span>
+          <select name="estimate_mode">
+            <option value="online">online</option>
+            <option value="table">table</option>
+            <option value="hybrid">hybrid</option>
+          </select>
+        </label>
+        <label class="wide">
+          <span>Table DB Path</span>
+          <input name="table_db_path" type="text" />
+        </label>
+        <label class="toggle-field wide">
+          <span>Table Writeback</span>
+          <div class="toggle-row">
+            <input name="table_writeback" type="checkbox" />
+            <em>将 online 采集到的 profile 追加写回 table DB。</em>
+          </div>
+        </label>
+      </form>
+      <div id="status-banner" class="status-banner idle">已就绪，可启动分析。</div>
+    </section>
+
+    <section class="panel run-history">
+      <div class="panel-head">
+          <h2>最近运行</h2>
+          <button id="refresh-button" class="ghost-button">刷新</button>
+      </div>
+      <div id="run-list" class="run-list"></div>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="panel-head results-head">
+        <div>
+            <p class="eyebrow">最新报告</p>
+            <h2 id="results-title">尚未选择运行任务</h2>
+          </div>
+          <p id="results-meta" class="muted">启动一次运行后，这里会显示分析结果。</p>
+        </div>
+
+      <section class="subpanel narrative-panel">
+        <div class="panel-head stacked-head">
+          <div>
+              <p class="eyebrow">请求执行之前</p>
+              <h3>Estimate 流程</h3>
+            </div>
+            <p id="pipeline-meta" class="muted">这里会展示在进入 measured 阶段之前，为构建 estimate 预先花费了多少分析时间。</p>
+        </div>
+        <div id="pipeline-cards" class="pipeline-cards"></div>
+        <div id="pipeline-steps" class="pipeline-steps"></div>
+      </section>
+
+      <div id="estimate-cards" class="overview-cards"></div>
+      <div id="execution-cards" class="overview-cards"></div>
+
+      <section class="subpanel narrative-panel measured-panel">
+        <div class="panel-head stacked-head">
+          <div>
+              <p class="eyebrow">随后进行校验</p>
+              <h3>实测时间 Measured Runtime</h3>
+            </div>
+            <p id="measured-meta" class="muted">Measured timings 来自 estimate 完成之后的多次 CUDA 同步实测。</p>
+        </div>
+        <div id="measured-cards" class="overview-cards"></div>
+      </section>
+
+      <div class="results-grid">
+        <article class="subpanel">
+          <h3>Estimate 构成</h3>
+          <div id="estimate-breakdowns"></div>
+        </article>
+        <article class="subpanel">
+          <h3>实测时间 Measured Timings</h3>
+          <div id="measured-breakdowns"></div>
+        </article>
+        <article class="subpanel">
+          <h3>硬件标定 Calibration</h3>
+          <div id="calibration-grid" class="kv-grid"></div>
+        </article>
+        <article class="subpanel">
+          <h3>Profiler 热点 CUDA Ops</h3>
+          <div id="profile-tables"></div>
+        </article>
+      </div>
+
+      <div class="results-grid">
+        <article class="subpanel">
+          <div class="panel-head stacked-head">
+            <div>
+              <h3>Per-rank Timings</h3>
+              <p class="muted">查看 rank 间 max/min gap 与负载分布。</p>
+            </div>
+          </div>
+          <div id="rank-timings"></div>
+        </article>
+        <article class="subpanel">
+          <div class="panel-head stacked-head">
+            <div>
+              <h3>Communication</h3>
+              <p class="muted">统计 collective 类型、次数与总时延。</p>
+            </div>
+          </div>
+          <div id="comm-tables"></div>
+        </article>
+      </div>
+
+      <article class="subpanel operator-panel">
+        <div class="panel-head results-head">
+          <div>
+            <h3>算子级 Compare</h3>
+            <p class="muted">按 phase / rank / error 过滤，定位 top mismatch 与 bottleneck。</p>
+          </div>
+        </div>
+        <div class="toolbar-grid">
+          <label>
+            <span>Phase</span>
+            <select id="operator-phase-filter">
+              <option value="all">all</option>
+              <option value="prefill">prefill</option>
+              <option value="decode_step">decode_step</option>
+            </select>
+          </label>
+          <label>
+            <span>Rank</span>
+            <select id="operator-rank-filter">
+              <option value="all">all</option>
+            </select>
+          </label>
+          <label>
+            <span>Sort By</span>
+            <select id="operator-sort">
+              <option value="abs_err_ms">abs_err_ms</option>
+              <option value="measured_ms">measured_ms</option>
+              <option value="est_ms">est_ms</option>
+              <option value="rel_err_pct">rel_err_pct</option>
+            </select>
+          </label>
+          <label>
+            <span>Min Error ms</span>
+            <input id="operator-min-error" type="number" min="0" step="0.1" value="0" />
+          </label>
+        </div>
+        <div id="operator-compare"></div>
+      </article>
+
+      <div class="results-grid bottom-grid">
+        <article class="subpanel">
+          <h3>Estimate 主要贡献项</h3>
+          <div id="top-ops"></div>
+        </article>
+        <article class="subpanel">
+          <h3>运行日志</h3>
+          <pre id="run-logs" class="logs"></pre>
+        </article>
+      </div>
+
+      <article class="subpanel graph-panel">
+        <div class="panel-head">
+          <div>
+            <h3>计算图视图 Graph Views</h3>
+            <p id="graph-meta" class="muted">每次运行可按需开启 graph export，完成后会显示在这里。</p>
+          </div>
+          <select id="graph-asset-select"></select>
+        </div>
+        <div id="graph-links" class="inline-pills"></div>
+        <div id="graph-viewer" class="graph-viewer muted">尚未选择图产物。</div>
+      </article>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

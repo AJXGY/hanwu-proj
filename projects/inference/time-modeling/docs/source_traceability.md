@@ -1,0 +1,415 @@
+# 源码对应关系
+
+本文件为 `docs/` 下六份设计文档与主设计文档 `torch_based_profiling_design.md` 的源码对应关系表。
+
+说明：
+
+- 为避免正文被大量行内引用污染，这里按“目标文档行范围”做覆盖式映射；
+- 每个条目默认覆盖该行范围内的全部句子；如果同一节存在多个明显不同的 claim，会拆成多条；
+- `来源` 列只使用本次研究范围内的三个参考仓库：`nnscaler-M`、`nnscaler`、`aiconfigurator`；
+- 若没有直接实现，则在 `未直接对应原因` 中说明是 Torch-based 新需求，还是参考仓库已有能力但尚未抽象成统一 schema。
+
+## `docs/time_semantics_spec.md`
+
+- 行 `3-14`（`## 1. 目标`）
+  - 对应关系：避免混用 op profile、microbatch、optimizer step、service queue/scheduling 时间。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:42`；`reference_repos/nnscaler-M/nnscaler/runtime/utils.py:12`；`reference_repos/nnscaler-M/nnscaler/runtime/f16_optimizer.py:62`；`reference_repos/nnscaler/nnscaler/runtime/adapter/reducer.py:620`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/picking.py:36`
+  - 未直接对应原因：三仓没有统一时间语义规范；这里只是在已有局部语义之上做统一约束。
+- 行 `15-47`（`## 2. 总体原则`）
+  - 对应关系：统一时间单位、区分 measured/profiled/estimated/calibrated、显式声明时间边界。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:53`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:139`；`reference_repos/nnscaler-M/nnscaler/profiler/timer.py:172`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:26`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:186`
+  - 未直接对应原因：显式 `unit` 字段与 `evidence_level` 标签在三仓中都不是一等 schema。
+- 行 `48-141`（`## 3. 规范命名`）
+  - 对应关系：把 `fw_span/bw_span`、`comp_time/weight_update_time`、`context/generation/request` 统一重命名为更稳态的原子级、训练级、推理级指标。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:42`；`reference_repos/nnscaler/nnscaler/autodist/spmd_solver.py:41`；`reference_repos/nnscaler/nnscaler/autodist/descs.py:64`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:218`
+  - 未直接对应原因：`op_runtime_overhead_time`、`op_memory_stall_correction_time`、`critical_path_time` 这类新名字在三仓里没有现成字段，只是容易加的修正/组合层。
+- 行 `142-194`（`## 4. 推理时间语义`）
+  - 对应关系：prefill/context 与 decode/generation 分离；`request_end_to_end_time = prefill + decode_steps`；`ttft/tpot` 只作为派生视图。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:61`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:102`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:218`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:221`
+  - 未直接对应原因：AIConfigurator 是 serving-first 抽象；这里把它改造成 Torch runtime 语义。
+- 行 `195-264`（`## 5. 训练时间语义`）
+  - 对应关系：区分 microbatch、optimizer update、train iteration；支持梯度累加、延迟同步、optimizer 边界定义。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/runtime/utils.py:12`；`reference_repos/nnscaler-M/tests/runtime/test_grad_accum.py:61`；`reference_repos/nnscaler-M/tests/runtime/test_grad_accum.py:154`；`reference_repos/nnscaler-M/nnscaler/runtime/f16_optimizer.py:62`；`reference_repos/nnscaler/nnscaler/runtime/adapter/reducer.py:612`
+  - 未直接对应原因：这些时间层级在运行时行为中存在，但没有 predictor 输出 schema。
+- 行 `265-289`（`## 6. 组合规则`）
+  - 对应关系：同时保留 `sum_time` 与 `critical_path_time`；最终端到端默认取关键路径；保守处理 overlap。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/estimator.py:38`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/operations.py:1559`
+  - 未直接对应原因：三仓都没有通用 DAG critical-path 引擎；这里只能视为新系统必须新增的组合能力。
+- 行 `290-310`（`## 7. 测量和预测的一致性要求`）
+  - 对应关系：测量应记录 warmup/benchmark_repeat/profile_repeat/sync/aggregation；预测应返回 evidence/source/confidence。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:121`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:249`；`reference_repos/nnscaler-M/nnscaler/profiler/timer.py:226`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3315`
+  - 未直接对应原因：测量流程有实现，但记录字段和预测证据标签未标准化。
+- 行 `311-328`（`## 8. 命名兼容策略`）
+  - 对应关系：旧命名兼容映射。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:42`；`reference_repos/nnscaler/nnscaler/autodist/spmd_solver.py:41`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:355`
+  - 未直接对应原因：无。
+- 行 `329-339`（`## 9. v1 强制约束`）
+  - 对应关系：输出必须模式区分、可分解、显式区分 measured/estimated。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:89`
+  - 未直接对应原因：训练侧 schema 与 `measured/estimated` 标签要新建。
+- 行 `340-376`（`## 10. 建议的最小输出字段`）
+  - 对应关系：推理/训练最小 JSON 输出字段集。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:432`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:219`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`
+  - 未直接对应原因：这是新系统统一输出契约，三仓不存在完全一致的字段集合。
+- 行 `377-381`（`## 11. 与参考仓库的关系`）
+  - 对应关系：训练分解借鉴 nnScaler 系；推理 phase/summarization 借鉴 AIConfigurator；不继承 serving 队列语义。
+  - 来源：`reference_repos/nnscaler/nnscaler/autodist/spmd_solver.py:41`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/picking.py:36`
+  - 未直接对应原因：无。
+
+## `docs/internal_graph_ir_schema.md`
+
+- 行 `3-15`（`## 1. 设计目标`）
+  - 对应关系：内部 IR 负责解耦 Torch 前端、后续运行时模型与分布式规划。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:69`；`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:127`；`reference_repos/nnscaler/nnscaler/graph/graph.py:37`
+  - 未直接对应原因：现有实现是 `torch.fx -> IRGraph` 专用链路，不是 runtime-agnostic `GraphSpec`。
+- 行 `16-37`（`## 2. 顶层对象`）
+  - 对应关系：统一的 `GraphSpec` 顶层对象。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/graph.py:44`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:67`
+  - 未直接对应原因：三仓都没有统一顶层 JSON graph schema；只能从 `IRGraph`、runtime config、summary 中拼装。
+- 行 `38-67`（`## 3. 顶层字段定义`）
+  - 对应关系：`graph_id`、`graph_kind`、`frontend`、`runtime_target` 等顶层字段。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:69`；`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:114`
+  - 未直接对应原因：只直接支持 `torch.fx`；`torch.export`、`aot_autograd`、通用 eager trace 需新增。
+- 行 `68-187`（`## 4. 节点模式`）
+  - 对应关系：节点需要 op type、scope、inputs/outputs、shape/dtype/layout、recompute/distribution annotation。
+  - 来源：`reference_repos/nnscaler/nnscaler/ir/operator.py:19`；`reference_repos/nnscaler/nnscaler/ir/operator.py:167`；`reference_repos/nnscaler/nnscaler/graph/parser/parser.py:243`；`reference_repos/nnscaler/nnscaler/graph/tracer/metadata.py:83`；`reference_repos/nnscaler/nnscaler/graph/tracer/metadata.py:88`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:11`
+  - 未直接对应原因：现有字段分散在 `IRFwOperation`、tensor metadata、autodist desc 中，没有统一 `NodeSpec`。
+- 行 `188-221`（`## 5. 张量模式`）
+  - 对应关系：张量需要 shape/dtype/role/producer/consumers/requires_grad。
+  - 来源：`reference_repos/nnscaler/nnscaler/ir/tensor.py:253`；`reference_repos/nnscaler/nnscaler/graph/segment.py:277`；`reference_repos/nnscaler/nnscaler/graph/segment.py:287`；`reference_repos/nnscaler/nnscaler/ir/tensor.py:406`
+  - 未直接对应原因：`optimizer_state`、`kv_cache` 角色没有进入统一 IR tensor role。
+- 行 `222-256`（`## 6. 边模式`）
+  - 对应关系：区分 data/control/comm edge，并为 comm edge 记录 primitive/payload/mesh。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/segment.py:93`；`reference_repos/nnscaler/nnscaler/runtime/adapter/collectives.py:52`；`reference_repos/nnscaler/nnscaler/runtime/adapter/collectives.py:110`
+  - 未直接对应原因：repo 有 producer/consumer 和 collective op，但没有独立 `EdgeSpec` 对象。
+- 行 `257-283`（`## 7. Region 模式`）
+  - 对应关系：用 region 提供子图/模块级解释性视图。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/segment.py:76`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:74`
+  - 未直接对应原因：现有只有 `IRSegment` 与 summary breakdown，没有统一 region taxonomy。
+- 行 `284-302`（`## 8. Loop region 模式`）
+  - 对应关系：显式表示 decode token loop。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:118`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:242`
+  - 未直接对应原因：AIConfigurator 有 prefill/decode phase split，但没有 loop-carried tensor / state update graph schema。
+- 行 `303-322`（`## 9. 设备与 mesh 模式`）
+  - 对应关系：设备 mesh、轴、拓扑信息。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:18`；`reference_repos/nnscaler/nnscaler/runtime/device.py:99`
+  - 未直接对应原因：现有只到 `MeshDesc(row,col)` 和 runtime groups；命名轴与 topology 需新建。
+- 行 `323-340`（`## 10. 执行配置模式`）
+  - 对应关系：batch/seq/dtype/GA/optimizer/tp-dp-pp/zero 等 execution config。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:242`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:217`
+  - 未直接对应原因：这些配置分散存在，还没变成 IR 顶层统一对象。
+- 行 `341-352`（`## 11. 最小不变量`）
+  - 对应关系：单 producer、训练图区分 forward/backward 等约束。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/segment.py:355`；`reference_repos/nnscaler/nnscaler/graph/graph.py:168`
+  - 未直接对应原因：phase/region 约束本身未被数据结构显式保存。
+- 行 `353-363`（`## 12. v1 推荐的 IR 生成顺序`）
+  - 对应关系：trace -> metadata -> key generation 的生成流程。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:69`；`reference_repos/nnscaler/nnscaler/graph/tracer/metadata.py:99`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:400`
+  - 未直接对应原因：phase/region/distributed metadata 到统一 query key 仍需新系统显式串起来。
+- 行 `364-368`（`## 13. 与参考仓库的关系`）
+  - 对应关系：借鉴 `descs.py` 与 AIConfigurator 的 phase/per-op breakdown，但不绑定原始类型。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:11`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:89`
+  - 未直接对应原因：无。
+
+## `docs/cost_database_schema.md`
+
+- 行 `3-12`（`## 1. 目标`）
+  - 对应关系：数据库支持单算子、模块、通信查询，并区分 measured/interpolated/extrapolated/calibrated。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:115`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3315`
+  - 未直接对应原因：`evidence_level` 是新系统 schema 需求。
+- 行 `13-28`（`## 2. 分层结构`）
+  - 对应关系：分 compute/comm/calibration/validation 四层。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:124`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:129`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:2045`
+  - 未直接对应原因：compute/comm 有直接实现；calibration/validation 需新增持久层。
+- 行 `29-49`（`## 3. 顶层元数据`）
+  - 对应关系：manifest 记录 schema/runtime/hardware/software/units。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:1979`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:1987`
+  - 未直接对应原因：现有是 system YAML + version，而不是统一 `manifest.json`。
+- 行 `50-138`（`## 4. 计算 profile 模式`）
+  - 对应关系：`ComputeProfileRecord`、query key、measurement、memory、statistics、provenance。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:41`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:294`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:400`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:465`
+  - 未直接对应原因：现有 `ProfiledMetrics` 覆盖 measurement/memory 主体，但 statistics/provenance/evidence_level 大多缺失。
+- 行 `139-187`（`## 5. 通信 profile 模式`）
+  - 对应关系：`CommProfileRecord`、按 primitive/world_size/message_size/dtype/topology 查询，保存 piecewise curve。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:31`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:377`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:436`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:4462`
+  - 未直接对应原因：mesh/topology 虽可推导，但未进入统一 query schema。
+- 行 `188-218`（`## 6. 修正层模式`）
+  - 对应关系：CalibrationRecord 与 correction kinds。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:186`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:175`
+  - 未直接对应原因：参考实现只有 runtime correction scale，没有正式 calibration 表。
+- 行 `219-247`（`## 7. 验证记录模式`）
+  - 对应关系：ValidationRecord 与 error fields。
+  - 来源：`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:176`
+  - 未直接对应原因：三仓都没有 validation schema；这里只能借用误差统计思路。
+- 行 `248-266`（`## 8. 查询顺序`）
+  - 对应关系：measured -> calibrated -> interpolated -> extrapolated -> fallback 的查询优先级。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:31`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3445`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:4566`
+  - 未直接对应原因：插值/外推/analytic fallback 已存在，但统一优先级和返回标签需新建。
+- 行 `267-289`（`## 9. 建议的物理存储布局`）
+  - 对应关系：manifest + compute/comm/calibration/validation 分目录。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:465`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:512`
+  - 未直接对应原因：两仓现有物理布局不一致；这里是统一化建议。
+- 行 `290-317`（`## 10. 最小主键建议`）
+  - 对应关系：主键至少包含 runtime/hardware/software/op/phase/shape/dtype/distributed。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:416`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:425`
+  - 未直接对应原因：当前 key 仅到 `signature + serialized shape/dtype/requires_grad`。
+- 行 `318-323`（`## 11. 与参考仓库的关系`）
+  - 对应关系：继承 nnScaler 系 compute/comm 分离与 AIConfigurator 系 system metadata/query API 组织方式。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:46`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:129`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:1979`
+  - 未直接对应原因：无。
+
+## `docs/analysis_protocol.md`
+
+- 行 `3-14`（`## 1. 目标`）
+  - 对应关系：定义统一 profiling protocol，使结果可复现、可入库。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:119`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:123`
+  - 未直接对应原因：协议文档层本身是新增物。
+- 行 `15-26`（`## 2. 分析对象`）
+  - 对应关系：分析对象分 op/module/communication。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:78`；`reference_repos/nnscaler-M/nnscaler/profiler/memory.py:25`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:2045`
+  - 未直接对应原因：module profiling 在参考仓库里存在但不统一。
+- 行 `27-50`（`## 3. 公共环境要求`）
+  - 对应关系：环境快照、独占 GPU、显式同步等要求。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:206`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:244`；`reference_repos/nnscaler-M/nnscaler/profiler/timer.py:93`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:1987`
+  - 未直接对应原因：同步和系统元数据有局部实现，但统一 environment manifest 缺失。
+- 行 `51-75`（`## 4. 图到 profile key 的生成流程`）
+  - 对应关系：graph extract、metadata normalize、去重 profile。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:69`；`reference_repos/nnscaler/nnscaler/graph/tracer/metadata.py:88`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:63`
+  - 未直接对应原因：`torch.export`/eager trace 与统一 query key schema 仍需新增。
+- 行 `76-134`（`## 5. 单算子分析协议`）
+  - 对应关系：dummy input 构造、warmup、forward 与 forward+backward 采样、memory buckets、失败处理。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:148`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:153`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:249`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:260`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:205`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:219`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:323`
+  - 未直接对应原因：recompute replay 和 `fallback_required` 占位记录不是现成实现；当前失败策略是惩罚值。
+- 行 `135-167`（`## 6. 模块级分析协议`）
+  - 对应关系：attention/MLP/block/optimizer substep 等模块级 profiling。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/memory.py:25`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:539`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:2061`
+  - 未直接对应原因：缺统一 `covered_node_ids/substitution_policy`。
+- 行 `168-218`（`## 7. 通信分析协议`）
+  - 对应关系：all-reduce/all-gather/reduce-scatter/broadcast/p2p/all-to-all，按 world size/message size/dtype/topology 采样。
+  - 来源：`reference_repos/nnscaler/nnscaler/runtime/adapter/collectives.py:52`；`reference_repos/nnscaler/nnscaler/runtime/adapter/collectives.py:92`；`reference_repos/nnscaler/nnscaler/runtime/adapter/collectives.py:303`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:31`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:4462`
+  - 未直接对应原因：topology 维度多数还是隐式系统配置。
+- 行 `219-242`（`## 8. 训练专项协议`）
+  - 对应关系：训练至少拆 microbatch forward/backward 与 optimizer update，记录 GA、同步边界、recompute。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/graph.py:122`；`reference_repos/nnscaler-M/nnscaler/runtime/f16_optimizer.py:124`；`reference_repos/nnscaler/tests/runtime/test_grad_accum.py:94`；`reference_repos/nnscaler/nnscaler/ir/operator.py:89`
+  - 未直接对应原因：行为有，协议化 profile artifact 无。
+- 行 `243-269`（`## 9. 推理专项协议`）
+  - 对应关系：必须拆 prefill 与 decode，显式记录 KV cache 相关维度。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:244`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:251`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3635`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3784`
+  - 未直接对应原因：AIConfigurator 的维度建模是 backend-specific，不是 Torch-first collector protocol。
+- 行 `270-280`（`## 10. 质量门槛`）
+  - 对应关系：入库前检查 measured_runs、噪声、完整元数据与单位。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:121`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:26`
+  - 未直接对应原因：`cov`、高噪声标记、显式成功/失败状态需新建字段。
+- 行 `281-292`（`## 11. 产物清单`）
+  - 对应关系：manifest、records、failures、summary 等 batch artifact。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:465`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:263`
+  - 未直接对应原因：现有只有局部 dump 和 dataframe summary，没有统一 artifact bundle。
+- 行 `293-304`（`## 12. 与验证流程的衔接`）
+  - 对应关系：建库 -> 预测 -> 真实运行 -> ValidationRecord。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:53`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:269`
+  - 未直接对应原因：ValidationRecord 本身需新增。
+- 行 `305-309`（`## 13. 与参考仓库的关系`）
+  - 对应关系：继承 nnScaler 系 CUDA 实测与离线通信 profile，继承 AIConfigurator 的 op family DB/summary 方式。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:206`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:129`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:1979`
+  - 未直接对应原因：无。
+
+## `docs/validation_benchmark_matrix.md`
+
+- 行 `3-12`（`## 1. 目标`）
+  - 对应关系：验证要同时回答可信范围与误差来源。
+  - 来源：`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:176`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:1369`
+  - 未直接对应原因：缺统一 Torch eager validator。
+- 行 `13-38`（`## 2. 验证指标`）
+  - 对应关系：abs/relative/MAPE/component/topk bottleneck，以及训练/推理专项拆分指标。
+  - 来源：`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:190`；`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:196`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:19`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:53`；`reference_repos/nnscaler/tests/runtime/test_grad_accum.py:103`
+  - 未直接对应原因：统一 validation schema 需新增。
+- 行 `39-71`（`## 3. 分阶段矩阵策略`）
+  - 对应关系：P0 单卡打通，P1 主流 dense LLM，P2 MoE/多节点/复杂优化器。
+  - 来源：`reference_repos/nnscaler/nnscaler/parallel.py:70`；`reference_repos/nnscaler/tests/parallel_module/test_inference.py:61`；`reference_repos/nnscaler-M/nnscaler/autodist/apis.py:100`
+  - 未直接对应原因：这是产品化路线，不是参考仓库现成脚本。
+- 行 `72-96`（`## 4. 模型集合`）
+  - 对应关系：优先选择 Llama/Qwen 一类 dense decoder-only 模型，MoE 放后续。
+  - 来源：`reference_repos/nnscaler-M/examples/llama3_demo/train.py:36`；`reference_repos/nnscaler-M/examples/Qwen2.5/train.py:12`；`reference_repos/aiconfigurator/tests/unit/sdk/models/test_model_config.py:34`
+  - 未直接对应原因：`TinyLlama/Mistral` 不是三仓都已有的显式样本，但扩展成本低。
+- 行 `97-122`（`## 5. 硬件矩阵`）
+  - 对应关系：单机 2/4 GPU 再扩多节点，覆盖常见 GPU 家族。
+  - 来源：`reference_repos/nnscaler/tests/parallel_module/test_inference.py:91`；`reference_repos/nnscaler-M/tests/profiler/test_benchmark_comm.py:25`；`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:148`
+  - 未直接对应原因：具体 SKU 矩阵要靠你们自己配置。
+- 行 `123-150`（`## 6. 推理基准矩阵`）
+  - 对应关系：单 GPU 与 TP 多 GPU 推理 case；同时验证 prefill、decode_step、request。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:78`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:122`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:256`
+  - 未直接对应原因：现有是 serving backend 抽象，不是 Torch eager 图抽象。
+- 行 `151-179`（`## 7. 训练基准矩阵`）
+  - 对应关系：单卡、多卡 DDP、TP、复合并行、梯度累加的训练 case。
+  - 来源：`reference_repos/nnscaler/tests/runtime/test_grad_accum.py:95`；`reference_repos/nnscaler/tests/runtime/test_reducer.py:100`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`
+  - 未直接对应原因：benchmark 表头和输出文件要新建。
+- 行 `180-198`（`## 8. 维度扫描矩阵`）
+  - 对应关系：batch/seq/dtype/GA/checkpoint sweep。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:294`；`reference_repos/nnscaler/nnscaler/cli/trainer_args.py:44`
+  - 未直接对应原因：缺“验证 sweep executor”。
+- 行 `199-218`（`## 9. 接受阈值`）
+  - 对应关系：MAPE 与 bottleneck 一致性门槛。
+  - 来源：`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:196`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:1379`
+  - 未直接对应原因：阈值本身是产品决策，不是参考仓库常量。
+- 行 `219-230`（`## 10. 验证执行协议`）
+  - 对应关系：先建库、再预测、再真实运行、再产出验证记录。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:234`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:37`
+  - 未直接对应原因：缺统一 Torch validator。
+- 行 `231-240`（`## 11. 最小输出报表`）
+  - 对应关系：summary/csv/component breakdown/bottleneck match 报表。
+  - 来源：`reference_repos/aiconfigurator/tools/support_matrix/support_matrix.py:436`；`reference_repos/aiconfigurator/tools/simple_sdk_demo/cli/main.py:177`
+  - 未直接对应原因：字段集合需新建。
+- 行 `241-245`（`## 12. 与参考仓库的关系`）
+  - 对应关系：训练分项借鉴 nnScaler 系，表格化 summary 借鉴 AIConfigurator，不纳入 serving SLA/autoscaling。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`；`reference_repos/aiconfigurator/tools/simple_sdk_demo/sla_service/sla_service.py:57`
+  - 未直接对应原因：无。
+
+## `docs/torch_eager_runtime_model_v1.md`
+
+- 行 `3-18`（`## 1. 定位`）
+  - 对应关系：定位为 Torch eager 图级 timing model，而非 serving queue planner、compile idealization 或 cycle simulator。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/picking.py:36`；`reference_repos/nnscaler/tests/parallel_module/test_gencode_torch_compile.py:20`；`reference_repos/nnscaler-M/nnscaler/profiler/estimator.py:17`
+  - 未直接对应原因：`torch_eager_v1` 本身是新 runtime model。
+- 行 `19-40`（`## 2. v1 假设`）
+  - 对应关系：eager、单进程单设备或一进程一设备、无 CUDA Graph、无 compile、无服务队列、可包含有限 overlap/recompute/optimizer。
+  - 来源：`reference_repos/nnscaler-M/tests/runtime/test_runtime_collectives.py:17`；`reference_repos/nnscaler-M/nnscaler/runtime/adapter/collectives.py:113`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/models.py:1619`；`reference_repos/nnscaler/nnscaler/autodist/cost_database.py:377`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/operations.py:1559`
+  - 未直接对应原因：这些是假设拼装，不是现成 runtime-model 类。
+- 行 `41-70`（`## 3. 输入契约`）
+  - 对应关系：最小输入包括 graph、execution config、device mesh、cost db、correction layer。
+  - 来源：`reference_repos/nnscaler/nnscaler/program.py:28`；`reference_repos/nnscaler/nnscaler/parallel.py:793`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:234`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:175`
+  - 未直接对应原因：`GraphSpec`/`device_mesh` 是新统一对象。
+- 行 `71-124`（`## 4. 推理模型`）
+  - 对应关系：prefill region + decode step region；按节点查 compute、按边查 comm，KV cache 维度进入 query key，最后聚合到 request。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:61`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:118`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/operations.py:865`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3635`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3784`
+  - 未直接对应原因：AIConfigurator 没有 generic Torch graph/edge schema；它是 op-query 驱动。
+- 行 `125-157`（`## 5. 训练模型`）
+  - 对应关系：forward/backward/optimizer/comm region；训练侧至少分 activation comm、gradient sync、parameter sync。
+  - 来源：`reference_repos/nnscaler/nnscaler/autodist/spmd_solver.py:41`；`reference_repos/nnscaler/nnscaler/autodist/cost_database.py:398`；`reference_repos/nnscaler/nnscaler/runtime/adapter/reducer.py:612`；`reference_repos/nnscaler-M/nnscaler/runtime/f16_optimizer.py:24`
+  - 未直接对应原因：三类 comm taxonomy 需要在新 predictor 中显式化。
+- 行 `158-199`（`## 6. 组合引擎`）
+  - 对应关系：节点时间、边时间、critical path、保守 overlap。
+  - 来源：`reference_repos/nnscaler/nnscaler/autodist/cost_database.py:375`；`reference_repos/nnscaler-M/nnscaler/runtime/adapter/collectives.py:113`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/operations.py:1559`
+  - 未直接对应原因：缺 generic critical-path solver 和显式 runtime-overhead/memory-stall 字段。
+- 行 `200-215`（`## 7. 修正层`）
+  - 对应关系：轻量 correction layer、保留 raw/calibrated estimate。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:186`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:175`
+  - 未直接对应原因：raw/calibrated 双输出 schema 要新增。
+- 行 `216-248`（`## 8. 输出契约`）
+  - 对应关系：推理/训练输出至少含 e2e、compute/comm/overhead、top ops/regions。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:346`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:219`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:271`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`
+  - 未直接对应原因：训练输出 schema 与 `critical_path_time/top_regions` 需新增。
+- 行 `249-258`（`## 9. v1 不支持或仅部分支持的内容`）
+  - 对应关系：不支持 continuous batching、queueing、复杂 overlap、auto partition search、非 eager runtime、任意动态控制流。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/picking.py:36`；`reference_repos/nnscaler/nnscaler/parallel.py:796`；`reference_repos/nnscaler/tests/parallel_module/test_gencode_torch_compile.py:20`
+  - 未直接对应原因：这是刻意不继承参考仓库的一部分能力。
+- 行 `259-266`（`## 10. v1 与参考仓库的关系`）
+  - 对应关系：训练分解借鉴 nnScaler 系，phase summary 借鉴 AIConfigurator，不要求 nnScaler IR。
+  - 来源：`reference_repos/nnscaler/nnscaler/autodist/spmd_solver.py:41`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:219`；`reference_repos/nnscaler/nnscaler/program.py:28`
+  - 未直接对应原因：无。
+- 行 `267-275`（`## 11. 向 v2 的自然扩展`）
+  - 对应关系：`torch.compile`、更强 decode 曲线、overlap、distributed inference、auto calibration/reporting。
+  - 来源：`reference_repos/nnscaler/tests/parallel_module/test_gencode_torch_compile.py:20`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:3784`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/operations.py:1559`
+  - 未直接对应原因：多属未来扩展方向。
+
+## `torch_based_profiling_design.md`
+
+- 行 `3-26`（`## 1. 背景`）
+  - 对应关系：Torch-first 图级 cost model；AIConfigurator 适合借鉴 op/db/summary，但 runtime 假设偏 serving backend；nnScaler/nnScaler-M 更适合训练侧参考。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:69`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:20`；`reference_repos/aiconfigurator/tools/simple_sdk_demo/sla_service/sla_service.py:57`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:119`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:115`
+  - 未直接对应原因：Torch-first 统一产品定位本身是新抽象。
+- 行 `27-42`（`## 2. 问题陈述`）
+  - 对应关系：给定模型、硬件、dtype、batch、seq、并行策略，预测推理/训练时间及瓶颈。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:37`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:53`；`reference_repos/nnscaler-M/nnscaler/autodist/apis.py:113`
+  - 未直接对应原因：没有单一工具同时覆盖 Torch 推理与训练预测。
+- 行 `43-56`（`## 3. 产品目标`）
+  - 对应关系：图摄取、归一化 IR、离线分析 + 图级组合、单多设备、算子/子图/阶段/e2e 估算。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:127`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:1298`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:13`
+  - 未直接对应原因：这些能力散落在三仓，没有一个统一 Torch predictor 产品。
+- 行 `57-95`（`## 4. 主要目标`）
+  - 对应关系：推理用 graph/subgraph 而不是服务指标做核心抽象；训练至少拆 forward/backward/comm/update/e2e；准确性以与真实执行接近为准。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:162`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:53`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`；`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:176`
+  - 未直接对应原因：把 serving 指标降为派生视图，是对 AIConfigurator 的有意识裁剪。
+- 行 `96-107`（`## 5. 非目标`）
+  - 对应关系：不做 deployment orchestration、生产后端配置生成、非 Torch runtime 主目标、cycle-level 模拟。
+  - 来源：`reference_repos/aiconfigurator/tools/simple_sdk_demo/sla_service/sla_service.py:50`；`reference_repos/aiconfigurator/tools/generator_validator/backend/vllm.py:86`
+  - 未直接对应原因：这是产品范围收缩，不是实现缺失。
+- 行 `108-115`（`## 6. 目标用户`）
+  - 对应关系：性能工程、研究人员、系统开发者、模型开发者。
+  - 来源：`reference_repos/aiconfigurator/tools/simple_sdk_demo/cli/main.py:177`；`reference_repos/nnscaler-M/nnscaler/autodist/apis.py:130`
+  - 未直接对应原因：用户画像是产品层概括，没有源码常量。
+- 行 `116-165`（`## 7. 核心用例`）
+  - 对应关系：单/多 GPU 推理，单/多 GPU 训练，what-if 对比。
+  - 来源：`reference_repos/nnscaler/tests/parallel_module/test_inference.py:61`；`reference_repos/nnscaler/tests/runtime/test_grad_accum.py:82`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:294`
+  - 未直接对应原因：what-if comparison API 仍需新建。
+- 行 `166-277`（`## 8. 功能需求`）
+  - 对应关系：图摄取、图归一化、代价数据库、离线分析、代价组合、训练/推理分解、可解释性输出。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/parser.py:42`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:119`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:129`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:904`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:219`
+  - 未直接对应原因：`runtime_overhead_time`、generic critical path、Torch token-loop reuse 仍是新工作。
+- 行 `278-298`（`## 9. 准确性与验证需求`）
+  - 对应关系：比较预测与测量，报告 abs/relative/MAPE/component/bottleneck/calibration。
+  - 来源：`reference_repos/nnscaler-M/examples/logs/comm_logs/comm_cost_comparison.py:190`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:169`
+  - 未直接对应原因：统一 validator 和 evidence taxonomy 缺失。
+- 行 `299-358`（`## 10. AIConfigurator 中可参考的想法`）
+  - 对应关系：操作分解、backend abstraction、summary/detail 分离、可视化友好输出。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:20`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:26`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:13`
+  - 未直接对应原因：`torch_eager/torch_compile/custom_runtime_x` runtime-family 是你们的新抽象。
+- 行 `359-425`（`## 11. nnScaler 和 nnScaler-M 中可参考的想法`）
+  - 对应关系：operator profile DB、communication DB、compute/comm/update 分离、plan/stage analysis。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:129`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`；`reference_repos/nnscaler-M/nnscaler/autodist/apis.py:135`
+  - 未直接对应原因：`不要要求用户先做 nnScaler graph rewrite` 是新系统去耦要求。
+- 行 `426-450`（`## 12. 拟议系统范围`）
+  - 对应关系：V1 专注 Torch 图提取、离线 profile、单卡推理/训练、基础多卡训练、验证报告；V2 再扩 distributed inference / compile / visualization。
+  - 来源：`reference_repos/nnscaler/tests/parallel_module/test_inference.py:61`；`reference_repos/nnscaler/tests/parallel_module/test_gencode_torch_compile.py:20`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:13`
+  - 未直接对应原因：这是 roadmap，而不是现成模块。
+- 行 `451-486`（`## 13. 拟议软件架构`）
+  - 对应关系：`frontend/ir/profiler/database/predictor/runtime_models/validator/report` 的模块拆分。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:161`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:115`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:13`
+  - 未直接对应原因：`predictor/runtime_models/validator` 作为独立产品模块需新建。
+- 行 `487-502`（`## 14. 运行时模型需求`）
+  - 对应关系：明确定义 `torch_eager` 的一次推理、一次训练步、是否含 optimizer、如何处理 overlap。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:218`；`reference_repos/nnscaler-M/tests/runtime/test_grad_accum.py:61`
+  - 未直接对应原因：三仓都没有统一 runtime-model contract。
+- 行 `503-517`（`## 15. 图表示需求`）
+  - 对应关系：节点、张量边、调度标注、重复子图、stage/device 分配、参数所有权、通信边。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/segment.py:93`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:37`
+  - 未直接对应原因：需从 nnScaler IR 进一步抽象成通用 schema。
+- 行 `518-560`（`## 16. 分析需求`）
+  - 对应关系：计算分析、模块级分析、通信分析，覆盖 latency/memory/variance/primitive/topology。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:53`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:57`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:377`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:778`
+  - 未直接对应原因：variance/topology 记录需补全到统一 schema。
+- 行 `561-581`（`## 17. 预测语义`）
+  - 对应关系：冻结统一指标词表优于沿用仓库旧名。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:42`；`reference_repos/nnscaler-M/nnscaler/autodist/descs.py:67`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/common.py:355`
+  - 未直接对应原因：这是统一语言层，本身没有直接实现。
+- 行 `582-601`（`## 18. 校准策略`）
+  - 对应关系：允许 correction layer、residual analysis、per-runtime scale/bias。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:169`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:186`
+  - 未直接对应原因：系统化校准器需新建。
+- 行 `602-621`（`## 19. 输出需求`）
+  - 对应关系：序列化输出包含配置、图元数据、e2e、分解、top ops、confidence/evidence；支持 JSON/Markdown/CSV。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:67`；`reference_repos/aiconfigurator/tools/support_matrix/support_matrix.py:436`；`reference_repos/aiconfigurator/tools/simple_sdk_demo/cli/main.py:177`
+  - 未直接对应原因：confidence/evidence 字段需新建。
+- 行 `622-638`（`## 20. 评估基准`）
+  - 对应关系：尽早冻结模型/模式/硬件/dtype/batch/seq/scale 维度的 benchmark matrix。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_session.py:294`；`reference_repos/nnscaler/nnscaler/cli/trainer_args.py:44`
+  - 未直接对应原因：benchmark matrix driver 要新建。
+- 行 `639-649`（`## 21. 面向开发者的需求`）
+  - 对应关系：易扩 op profiler/runtime model/db entries，并可追溯到图节点与数据库查询。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:341`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:2002`
+  - 未直接对应原因：完整 traceability chain 需新建。
+- 行 `650-680`（`## 22. 风险与开放问题`）
+  - 对应关系：融合不匹配、动态行为、内存效应、分布式 overlap、训练定义。
+  - 来源：`reference_repos/nnscaler/nnscaler/graph/parser/converter.py:39`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:146`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/perf_database.py:555`
+  - 未直接对应原因：这部分本来就是已知风险，不要求有完备现成实现。
+- 行 `681-711`（`## 23. 推荐开发顺序`）
+  - 对应关系：先冻结术语与 benchmark，再做单设备基础，再做分布式，再做校准与产品化。
+  - 来源：`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/cost_database.py:115`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:13`
+  - 未直接对应原因：这是实施顺序，不是源码现成功能。
+- 行 `712-732`（`## 24. 编码前建议的即时交付物`）
+  - 对应关系：六份先导文档作为编码前交付物，并已在本项目落地。
+  - 来源：`docs/time_semantics_spec.md`；`docs/internal_graph_ir_schema.md`；`docs/cost_database_schema.md`；`docs/analysis_protocol.md`；`docs/validation_benchmark_matrix.md`；`docs/torch_eager_runtime_model_v1.md`
+  - 未直接对应原因：这是当前项目内文档落地，不属于外部参考仓库。
+- 行 `733-745`（`## 25. 实践总结`）
+  - 对应关系：Torch-first、复用 AIConfigurator 的分解/查询/呈现思想，复用 nnScaler 系训练分析/通信/组合思想，但不继承其核心运行时假设。
+  - 来源：`reference_repos/aiconfigurator/src/aiconfigurator/sdk/backends/base_backend.py:20`；`reference_repos/aiconfigurator/src/aiconfigurator/sdk/inference_summary.py:219`；`reference_repos/nnscaler-M/nnscaler/profiler/database.py:283`；`reference_repos/nnscaler-M/nnscaler/autodist/spmd_solver.py:41`
+  - 未直接对应原因：无。

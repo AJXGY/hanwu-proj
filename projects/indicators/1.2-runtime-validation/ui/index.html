@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>寒武纪 1.2 运行验证 Dashboard</title>
+    <style>
+      :root {
+        --bg: #f6f3ea;
+        --panel: #fffdf8;
+        --line: #d9ccb6;
+        --text: #1f1b17;
+        --muted: #6c6457;
+        --accent: #125b50;
+        --accent-2: #a64f2a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Noto Sans SC", "Source Han Sans SC", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(18,91,80,0.10), transparent 26%),
+          radial-gradient(circle at top right, rgba(166,79,42,0.10), transparent 22%),
+          var(--bg);
+      }
+      .shell {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 26px 20px 42px;
+      }
+      .hero {
+        margin-bottom: 22px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1 {
+        margin: 8px 0 10px;
+        font-size: clamp(30px, 5vw, 60px);
+        line-height: 0.95;
+      }
+      .sub {
+        max-width: 960px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 430px minmax(0, 1fr);
+        gap: 20px;
+      }
+      .panel {
+        background: rgba(255,253,248,0.94);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 18px;
+        box-shadow: 0 14px 44px rgba(50, 30, 12, 0.07);
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      .status {
+        padding: 12px 14px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+        background: #efe6d4;
+      }
+      .preset-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 700;
+        color: white;
+        background: var(--accent);
+      }
+      button.secondary { background: var(--accent-2); }
+      button.ghost {
+        background: #f1eadc;
+        color: var(--text);
+      }
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font: inherit;
+        color: var(--text);
+        background: white;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+      }
+      .check input { width: auto; margin: 0; }
+      .run-list {
+        display: grid;
+        gap: 10px;
+      }
+      .run-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        background: #fffdfa;
+      }
+      .run-card strong { display: block; }
+      .run-meta {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 6px;
+      }
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+      .metric .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .metric .value {
+        font-size: 24px;
+        font-weight: 800;
+      }
+      pre {
+        margin: 0;
+        padding: 14px;
+        background: #16120f;
+        color: #f8f4ec;
+        border-radius: 16px;
+        overflow: auto;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .result-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .result-links a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      @media (max-width: 980px) {
+        .grid { grid-template-columns: 1fr; }
+        .preset-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="eyebrow">Cambricon Indicator 1.2</div>
+        <h1>寒武纪运行验证 Dashboard</h1>
+        <div class="sub">
+          这套页面面向 `5.1.3 推理任务运行测试` 和 `5.1.4 训练任务运行测试`。
+          它不做时间预测，而是直接在寒武纪 Docker 镜像里跑真实任务，检查单卡 / 双卡是否能启动、
+          执行、结束，并产出推理结果、训练损失曲线和轻量 checkpoint 验证产物。
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>运行配置</h2>
+          <div class="status" id="status-box">页面已就绪。</div>
+          <div class="preset-grid">
+            <button class="ghost" data-preset="infer_single">推理单卡</button>
+            <button class="ghost" data-preset="infer_dual">推理双卡</button>
+            <button class="ghost" data-preset="train_single">训练单卡</button>
+            <button class="ghost" data-preset="train_dual">训练双卡</button>
+          </div>
+          <form id="run-form">
+            <div class="two-col">
+              <label>
+                任务类型
+                <select id="task" name="task">
+                  <option value="inference">inference</option>
+                  <option value="training">training</option>
+                </select>
+              </label>
+              <label>
+                规模
+                <select id="scale" name="scale">
+                  <option value="single">single</option>
+                  <option value="dual">dual</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              宿主机模型目录
+              <input id="host_model_dir" name="host_model_dir" />
+            </label>
+            <label>
+              Docker 镜像
+              <input id="image" name="image" />
+            </label>
+            <label>
+              Prompt
+              <textarea id="prompt" name="prompt"></textarea>
+            </label>
+            <div class="two-col">
+              <label>
+                physical_devices
+                <input id="physical_devices" name="physical_devices" />
+              </label>
+              <label>
+                dtype
+                <select id="dtype" name="dtype">
+                  <option value="bf16">bf16</option>
+                  <option value="fp16">fp16</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                max_new_tokens
+                <input id="max_new_tokens" name="max_new_tokens" type="number" min="1" />
+              </label>
+              <label>
+                iterations
+                <input id="iterations" name="iterations" type="number" min="1" />
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                pp_size
+                <select id="pp_size" name="pp_size">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
+              <label>
+                microbatch_count
+                <select id="microbatch_count" name="microbatch_count">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="4">4</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                microbatch_size
+                <input id="microbatch_size" name="microbatch_size" type="number" min="1" />
+              </label>
+              <label>
+                sequence_length
+                <input id="sequence_length" name="sequence_length" type="number" min="1" />
+              </label>
+            </div>
+            <label>
+              optimizer_type
+              <select id="optimizer_type" name="optimizer_type">
+                <option value="sgd">sgd</option>
+                <option value="adamw">adamw</option>
+              </select>
+            </label>
+            <div class="check">
+              <input id="enable_gradient_checkpointing" name="enable_gradient_checkpointing" type="checkbox" />
+              <span>enable_gradient_checkpointing</span>
+            </div>
+            <div class="button-row">
+              <button type="submit">启动运行测试</button>
+              <button class="secondary" type="button" id="refresh-btn">刷新列表</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>运行记录</h2>
+          <div class="run-list" id="run-list"></div>
+          <h2 style="margin-top: 22px;">运行详情</h2>
+          <div class="result-links" id="result-links"></div>
+          <div class="metric-grid" id="metric-grid"></div>
+          <pre id="detail-box">还没有选中运行。</pre>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const state = { defaults: null, presets: null, runs: [], selectedRunId: null };
+
+      async function fetchJson(url, options) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `Request failed: ${response.status}`);
+        }
+        return response.json();
+      }
+
+      function setStatus(message) {
+        document.getElementById("status-box").textContent = message;
+      }
+
+      function applyPayload(payload) {
+        for (const [key, value] of Object.entries(payload)) {
+          const element = document.getElementById(key);
+          if (!element) continue;
+          if (element.type === "checkbox") {
+            element.checked = Boolean(value);
+          } else {
+            element.value = value;
+          }
+        }
+      }
+
+      function collectPayload() {
+        const form = document.getElementById("run-form");
+        const data = new FormData(form);
+        return {
+          task: data.get("task"),
+          scale: data.get("scale"),
+          host_model_dir: data.get("host_model_dir"),
+          image: data.get("image"),
+          prompt: data.get("prompt"),
+          physical_devices: data.get("physical_devices"),
+          dtype: data.get("dtype"),
+          max_new_tokens: Number(data.get("max_new_tokens")),
+          iterations: Number(data.get("iterations")),
+          pp_size: Number(data.get("pp_size")),
+          microbatch_count: Number(data.get("microbatch_count")),
+          microbatch_size: Number(data.get("microbatch_size")),
+          sequence_length: Number(data.get("sequence_length")),
+          optimizer_type: data.get("optimizer_type"),
+          enable_gradient_checkpointing: document.getElementById("enable_gradient_checkpointing").checked
+        };
+      }
+
+      function renderRuns() {
+        const container = document.getElementById("run-list");
+        container.innerHTML = "";
+        for (const run of state.runs) {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "run-card";
+          card.style.textAlign = "left";
+          card.innerHTML = `
+            <strong>${run.payload.task} / ${run.payload.scale}</strong>
+            <div class="run-meta">run_id=${run.run_id} | status=${run.status}</div>
+            <div class="run-meta">${run.output_dir || ""}</div>
+          `;
+          card.addEventListener("click", () => {
+            state.selectedRunId = run.run_id;
+            renderDetail(run);
+          });
+          container.appendChild(card);
+        }
+      }
+
+      function metric(label, value) {
+        return `<div class="metric"><div class="label">${label}</div><div class="value">${value ?? "-"}</div></div>`;
+      }
+
+      function renderDetail(run) {
+        const links = document.getElementById("result-links");
+        links.innerHTML = "";
+        if (run.output_dir) {
+          const summaryPath = `${run.output_dir}/summary.json`;
+          const info = document.createElement("span");
+          info.textContent = `输出目录：${run.output_dir}`;
+          links.appendChild(info);
+        }
+
+        const summary = run.summary || {};
+        const metrics = [];
+        metrics.push(metric("状态", run.status));
+        metrics.push(metric("任务", run.payload.task));
+        metrics.push(metric("规模", run.payload.scale));
+        if (summary.request_time_ms != null) metrics.push(metric("request ms", Number(summary.request_time_ms).toFixed(3)));
+        if (summary.final_loss != null) metrics.push(metric("final loss", Number(summary.final_loss).toFixed(4)));
+        if (summary.mean_iteration_time_ms != null) metrics.push(metric("iter ms", Number(summary.mean_iteration_time_ms).toFixed(3)));
+        metrics.push(metric("成功", summary.success ? "yes" : "no"));
+        document.getElementById("metric-grid").innerHTML = metrics.join("");
+
+        const detail = {
+          payload: run.payload,
+          summary: run.summary,
+          error: run.error,
+          command: run.command_text,
+          stdout_tail: (run.stdout || "").slice(-6000),
+          stderr_tail: (run.stderr || "").slice(-6000)
+        };
+        document.getElementById("detail-box").textContent = JSON.stringify(detail, null, 2);
+      }
+
+      async function refreshRuns() {
+        const data = await fetchJson("/api/runs");
+        state.runs = data.runs || [];
+        renderRuns();
+        if (state.selectedRunId) {
+          const matched = state.runs.find((item) => item.run_id === state.selectedRunId);
+          if (matched) renderDetail(matched);
+        }
+      }
+
+      async function loadDefaults() {
+        const data = await fetchJson("/api/defaults");
+        state.defaults = data.defaults;
+        state.presets = data.presets;
+        applyPayload(data.defaults);
+      }
+
+      document.getElementById("run-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("正在提交运行任务...");
+        try {
+          const payload = collectPayload();
+          const data = await fetchJson("/api/runs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          setStatus(`已提交 run_id=${data.run_id}`);
+          await refreshRuns();
+        } catch (error) {
+          setStatus(`提交失败：${error.message}`);
+        }
+      });
+
+      document.querySelectorAll("[data-preset]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const presetName = button.getAttribute("data-preset");
+          if (state.presets && state.presets[presetName]) {
+            applyPayload(state.presets[presetName]);
+            setStatus(`已套用 ${presetName} 配置`);
+          }
+        });
+      });
+
+      document.getElementById("refresh-btn").addEventListener("click", async () => {
+        await refreshRuns();
+        setStatus("列表已刷新");
+      });
+
+      async function boot() {
+        await loadDefaults();
+        await refreshRuns();
+        setInterval(refreshRuns, 3000);
+      }
+
+      boot().catch((error) => setStatus(`初始化失败：${error.message}`));
+    </script>
+  </body>
+</html>

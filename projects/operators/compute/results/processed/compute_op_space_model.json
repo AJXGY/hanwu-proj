@@ -1,0 +1,285 @@
+{
+  "tool_name": "cambricon_compute_op_space_tool",
+  "tool_version": "v1",
+  "device_type": "MLU580",
+  "target_max_error_pct": 20.0,
+  "calibration_flops": [
+    402653184,
+    805306368,
+    1610612736,
+    3221225472,
+    6442450944
+  ],
+  "operators": {
+    "mlp_up_gemm::single_card": {
+      "operator": "mlp_up_gemm",
+      "scale": "single_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.164166,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.165914,
+          "seq_len": 32
+        },
+        {
+          "flops": 30064771072,
+          "latency_ms": 0.160236,
+          "seq_len": 256
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.946283,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "mlp_up_gemm::single_node_dual_card": {
+      "operator": "mlp_up_gemm",
+      "scale": "single_node_dual_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.163693,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.165818,
+          "seq_len": 32
+        },
+        {
+          "flops": 30064771072,
+          "latency_ms": 0.160727,
+          "seq_len": 256
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.980827,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "mlp_gate_gemm::single_card": {
+      "operator": "mlp_gate_gemm",
+      "scale": "single_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.163724,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.165973,
+          "seq_len": 32
+        },
+        {
+          "flops": 30064771072,
+          "latency_ms": 0.160439,
+          "seq_len": 256
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.941109,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "mlp_gate_gemm::single_node_dual_card": {
+      "operator": "mlp_gate_gemm",
+      "scale": "single_node_dual_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.164067,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.165959,
+          "seq_len": 32
+        },
+        {
+          "flops": 30064771072,
+          "latency_ms": 0.160143,
+          "seq_len": 256
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.945156,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "mlp_down_gemm::single_card": {
+      "operator": "mlp_down_gemm",
+      "scale": "single_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.192719,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.191855,
+          "seq_len": 32
+        },
+        {
+          "flops": 60129542144,
+          "latency_ms": 0.275227,
+          "seq_len": 512
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.884663,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "mlp_down_gemm::single_node_dual_card": {
+      "operator": "mlp_down_gemm",
+      "scale": "single_node_dual_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 1879048192,
+          "latency_ms": 0.19136,
+          "seq_len": 16
+        },
+        {
+          "flops": 3758096384,
+          "latency_ms": 0.192029,
+          "seq_len": 32
+        },
+        {
+          "flops": 60129542144,
+          "latency_ms": 0.274538,
+          "seq_len": 512
+        },
+        {
+          "flops": 240518168576,
+          "latency_ms": 0.886196,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "flash_attention::single_card": {
+      "operator": "flash_attention",
+      "scale": "single_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len_squared",
+      "calibration_points": [
+        {
+          "flops": 4194304,
+          "latency_ms": 0.12086,
+          "seq_len": 16
+        },
+        {
+          "flops": 16777216,
+          "latency_ms": 0.119236,
+          "seq_len": 32
+        },
+        {
+          "flops": 67108864,
+          "latency_ms": 0.058053,
+          "seq_len": 64
+        },
+        {
+          "flops": 1073741824,
+          "latency_ms": 0.058088,
+          "seq_len": 256
+        },
+        {
+          "flops": 68719476736,
+          "latency_ms": 0.920299,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "flash_attention::single_node_dual_card": {
+      "operator": "flash_attention",
+      "scale": "single_node_dual_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len_squared",
+      "calibration_points": [
+        {
+          "flops": 4194304,
+          "latency_ms": 0.126647,
+          "seq_len": 16
+        },
+        {
+          "flops": 16777216,
+          "latency_ms": 0.124162,
+          "seq_len": 32
+        },
+        {
+          "flops": 67108864,
+          "latency_ms": 0.057565,
+          "seq_len": 64
+        },
+        {
+          "flops": 1073741824,
+          "latency_ms": 0.057431,
+          "seq_len": 256
+        },
+        {
+          "flops": 68719476736,
+          "latency_ms": 0.920435,
+          "seq_len": 2048
+        }
+      ]
+    },
+    "attention_output_proj_gemm::single_card": {
+      "operator": "attention_output_proj_gemm",
+      "scale": "single_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 536870912,
+          "latency_ms": 0.03128,
+          "seq_len": 16
+        },
+        {
+          "flops": 1073741824,
+          "latency_ms": 0.032936,
+          "seq_len": 32
+        }
+      ]
+    },
+    "attention_output_proj_gemm::single_node_dual_card": {
+      "operator": "attention_output_proj_gemm",
+      "scale": "single_node_dual_card",
+      "interpolation": "linear_axis",
+      "axis": "seq_len",
+      "calibration_points": [
+        {
+          "flops": 536870912,
+          "latency_ms": 0.031273,
+          "seq_len": 16
+        },
+        {
+          "flops": 1073741824,
+          "latency_ms": 0.032979,
+          "seq_len": 32
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "runtime_model": "torch_tp_train_v1",
+  "model_path": "/home/o_mabin/LLM/models/Llama-3.1-8B",
+  "dtype": "bf16",
+  "optimizer_type": "sgd",
+  "microbatch_size": 1,
+  "sequence_length": 8,
+  "matrix": [
+    {
+      "name": "tp_single_mb1",
+      "parallel_mode": "single",
+      "world_size": 1,
+      "tp_size": 1,
+      "microbatch_count": 1,
+      "physical_devices": "0"
+    },
+    {
+      "name": "tp2_mb1",
+      "parallel_mode": "tp",
+      "world_size": 2,
+      "tp_size": 2,
+      "microbatch_count": 1,
+      "physical_devices": "0,1"
+    }
+  ]
+}

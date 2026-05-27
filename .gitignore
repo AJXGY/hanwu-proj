@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local run artifacts.
+tmp/
+tmp_*/
+artifacts/
+*.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.xdv
+
+# Generated model/checkpoint outputs. Keep small fixtures with explicit
+# negation rules in project-level .gitignore files when they are required.
+*.pt
+*.pth
+
+reports/
+validation_reports/
+dashboard_runs/
+charts/
+build/
+TORCH_PROFILER_RAW_DATA/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

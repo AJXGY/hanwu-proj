@@ -1,0 +1,56 @@
+runtime_defaults:
+  model_path: /home/o_mabin/LLM/models/Llama-3.1-8B
+  parallel_mode: tp
+  dtype: bf16
+  device: mlu:0
+  world_size: 2
+  tp_size: 2
+  microbatch_count: 1
+  microbatch_size: 1
+  sequence_length: 8
+  optimizer_type: sgd
+  lora_rank: 8
+  lora_alpha: 16.0
+  adapter_num_labels: 2
+  gradient_checkpointing: true
+
+calibration_defaults:
+  warmup_steps: 1
+  measure_steps: 3
+
+hardware:
+  gemm_tflops: 2.9
+  memory_bandwidth_gbps: 450.0
+  launch_overhead_ms: 0.15
+
+common:
+  forward:
+    effective_tflops_scale: 0.9
+  backward:
+    backward_compute_scale: 2.5
+    single_backward_compute_scale: 14.25
+    backward_efficiency_scale: 0.07
+    overhead_scale: 0.3
+  optimizer:
+    optimizer_launch_overhead_ms: 0.17
+  lora:
+    lora_backward_overhead_ms: 0.52
+
+tp:
+  forward:
+    tp_forward_efficiency: 0.166
+  backward:
+    tp_backward_efficiency: 0.2
+  communication:
+    overlap_ratio: 0.9
+    optimizer_efficiency: 0.4524052358756343
+    local_bandwidth_gbps: 450.0
+    local_latency_ms: 0.3
+
+phase_model:
+  phases:
+    - forward
+    - backward_compute
+    - backward_comm
+    - optimizer
+  total_formula: microbatch_count * (forward + backward_compute + backward_comm) + optimizer

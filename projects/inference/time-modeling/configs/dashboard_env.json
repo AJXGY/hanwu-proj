@@ -1,0 +1,70 @@
+{
+  "environment": {
+    "runner": "docker_run_image",
+    "accelerator_kind": "mlu",
+    "image_name": "cambricon-base/pytorch:v25.10.0-torch2.7.1-torchmlu1.29.1-ubuntu22.04-py310",
+    "python_bin": "python3",
+    "container_name": "mvp-dashboard-env-mlu",
+    "gpu_binding": "",
+    "docker_run_args": [
+      "--privileged",
+      "--pid=host",
+      "--cgroupns=host",
+      "--shm-size",
+      "64gb"
+    ],
+    "network_mode": "host",
+    "ipc_mode": "host",
+    "project_mounts": [
+      "/home/o_mabin/hanwuji-clj-proj",
+      "/home/o_mabin/LLM",
+      "/tmp",
+      "/data",
+      "/usr/bin/cnmon",
+      "/sys/kernel/debug"
+    ],
+    "docker_env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "CAMBRICON_VISIBLE_DEVICES": "all",
+      "MLU_VISIBLE_DEVICE": "all"
+    },
+    "auto_prepare": true
+  },
+  "request_defaults": {
+    "runner": "docker_run_image",
+    "image_name": "cambricon-base/pytorch:v25.10.0-torch2.7.1-torchmlu1.29.1-ubuntu22.04-py310",
+    "python_bin": "python3",
+    "model_path": "/home/o_mabin/LLM/models/Llama-3.1-8B",
+    "prompt": "alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha",
+    "max_new_tokens": 4,
+    "dtype": "bf16",
+    "parallel_mode": "tp",
+    "physical_devices": "0,1",
+    "world_size": 2,
+    "tp_size": 2,
+    "nnodes": 1,
+    "nproc_per_node": 2,
+    "node_rank": 0,
+    "master_addr": "127.0.0.1",
+    "master_port": 29500,
+    "remote_host": "",
+    "remote_ssh_port": 22,
+    "remote_physical_devices": "",
+    "remote_python_bin": "",
+    "remote_model_path": "",
+    "remote_container_name": "",
+    "interconnect": "ethernet",
+    "collective_bandwidth_gbps": "",
+    "collective_latency_ms": "",
+    "dist_timeout_minutes": 30,
+    "device": "mlu:0",
+    "estimate_only": false,
+    "estimate_mode": "hybrid",
+    "table_db_path": "database/module_profile_table_cambricon_mlu580.jsonl",
+    "table_writeback": true,
+    "warmup": 1,
+    "benchmark_repeat": 1,
+    "profile_repeat": 1,
+    "generate_graph_viz": true
+  }
+}
