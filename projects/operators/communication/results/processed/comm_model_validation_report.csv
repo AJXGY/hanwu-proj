@@ -1,8 +1,8 @@
 operator,calibration_points,validation_points,validation_avg_error_pct,validation_max_error_pct,all_points_avg_error_pct,all_points_max_error_pct,pass_le_20_pct
-all_gather,12,26,0.1948,0.5361,0.1333,0.5361,yes
-all_reduce,12,26,0.3826,3.3937,0.2618,3.3937,yes
-all_to_all,12,26,0.3086,1.5498,0.2112,1.5498,yes
-broadcast,12,26,0.2808,2.5892,0.1921,2.5892,yes
-reduce,12,26,0.2366,2.2668,0.1619,2.2668,yes
-reduce_scatter,12,26,1.7262,4.4443,1.1811,4.4443,yes
-send_recv,12,26,0.2983,1.3666,0.2041,1.3666,yes
+all_gather,12,26,0.2506,0.5901,0.1715,0.5901,yes
+all_reduce,12,26,0.1876,0.5619,0.1284,0.5619,yes
+all_to_all,12,26,2.2233,8.0343,1.5212,8.0343,yes
+broadcast,12,26,0.2125,1.0287,0.1454,1.0287,yes
+reduce,12,26,0.1442,0.6218,0.0987,0.6218,yes
+reduce_scatter,12,26,1.5876,4.5407,1.0862,4.5407,yes
+send_recv,12,26,2.1672,12.4429,1.4828,12.4429,yes

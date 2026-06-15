@@ -3,15 +3,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE="${IMAGE:-cambricon-base/pytorch:v25.10.0-torch2.7.1-torchmlu1.29.1-ubuntu22.04-py310}"
+CONTAINER_ROOT="${CONTAINER_ROOT:-/workspace/hanwu-time-modeling}"
 HOST_MODEL_DIR="${HOST_MODEL_DIR:-/home/o_mabin/LLM/models/Llama-3.1-8B}"
 MODEL_PATH="${MODEL_PATH:-/model}"
-TABLE_DB="${TABLE_DB:-/workspace/database/module_profile_table_cambricon_mlu580.jsonl}"
-OUTPUT_DIR="${OUTPUT_DIR:-/workspace/validation_reports/cambricon_profile_rebuild}"
+TABLE_DB="${TABLE_DB:-$CONTAINER_ROOT/database/module_profile_table_cambricon_mlu580.jsonl}"
+OUTPUT_DIR="${OUTPUT_DIR:-$CONTAINER_ROOT/validation_reports/cambricon_profile_rebuild}"
 
 echo "Starting Cambricon inference profile-table rebuild in Docker..."
 echo "  model: $HOST_MODEL_DIR"
-echo "  table: ${TABLE_DB/#\/workspace/$ROOT}"
-echo "  output root: ${OUTPUT_DIR/#\/workspace/$ROOT}"
+echo "  table: ${TABLE_DB/#$CONTAINER_ROOT/$ROOT}"
+echo "  output root: ${OUTPUT_DIR/#$CONTAINER_ROOT/$ROOT}"
 
 docker run --rm \
   --privileged \
@@ -24,13 +25,13 @@ docker run --rm \
   -e MLU_VISIBLE_DEVICE=all \
   -v /usr/bin/cnmon:/usr/bin/cnmon \
   -v /sys/kernel/debug:/sys/kernel/debug \
-  -v "$ROOT:/workspace" \
+  -v "$ROOT:$CONTAINER_ROOT" \
   -v "$HOST_MODEL_DIR:$MODEL_PATH:ro" \
   -v /data:/data \
   "$IMAGE" \
   bash -lc "
     source /torch/venv3/pytorch_infer/bin/activate && \
-    cd /workspace && \
+    cd '$CONTAINER_ROOT' && \
     rm -f '$TABLE_DB' && \
     echo '[profile] Running calibration prompt 0...' && \
     python -m torch.distributed.run --standalone --nproc_per_node 2 torch_infer_mvp.py \

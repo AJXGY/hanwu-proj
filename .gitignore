@@ -21,9 +21,15 @@ artifacts/
 reports/
 validation_reports/
 dashboard_runs/
+validation_runs/
 charts/
 build/
 TORCH_PROFILER_RAW_DATA/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local validation comparisons.
+*.local.csv
+*.local.png
+strict_local/

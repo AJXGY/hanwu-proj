@@ -1,9 +1,9 @@
 operator,scale,calibration_points,validation_points,validation_avg_error_pct,validation_max_error_pct,pass_le_20_pct
-concat,single_card,6,1,10.4156,10.4156,yes
-concat,single_node_dual_card,6,1,2.5992,2.5992,yes
-data_copy,single_card,6,1,3.6634,3.6634,yes
-data_copy,single_node_dual_card,6,1,6.6523,6.6523,yes
-reshape_transpose,single_card,6,1,4.5071,4.5071,yes
-reshape_transpose,single_node_dual_card,6,1,2.4131,2.4131,yes
-slice_copy,single_card,6,1,11.6531,11.6531,yes
-slice_copy,single_node_dual_card,6,1,6.7846,6.7846,yes
+concat,single_card,6,1,13.0057,13.0057,yes
+concat,single_node_dual_card,6,1,1.0699,1.0699,yes
+data_copy,single_card,6,1,6.6491,6.6491,yes
+data_copy,single_node_dual_card,6,1,4.7503,4.7503,yes
+reshape_transpose,single_card,6,1,0.8450,0.8450,yes
+reshape_transpose,single_node_dual_card,6,1,3.8000,3.8000,yes
+slice_copy,single_card,6,1,9.3817,9.3817,yes
+slice_copy,single_node_dual_card,6,1,8.3136,8.3136,yes

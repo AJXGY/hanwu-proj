@@ -19,22 +19,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.164125,
+          "latency_ms": 0.1637,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.165762,
+          "latency_ms": 0.165712,
           "seq_len": 32
         },
         {
           "flops": 30064771072,
-          "latency_ms": 0.160735,
+          "latency_ms": 0.160148,
           "seq_len": 256
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.94381,
+          "latency_ms": 0.955982,
           "seq_len": 2048
         }
       ]
@@ -47,22 +47,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.163772,
+          "latency_ms": 0.16396,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.165659,
+          "latency_ms": 0.166953,
           "seq_len": 32
         },
         {
           "flops": 30064771072,
-          "latency_ms": 0.16083,
+          "latency_ms": 0.160494,
           "seq_len": 256
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.946704,
+          "latency_ms": 1.03438,
           "seq_len": 2048
         }
       ]
@@ -75,22 +75,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.163817,
+          "latency_ms": 0.163915,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.16589,
+          "latency_ms": 0.165696,
           "seq_len": 32
         },
         {
           "flops": 30064771072,
-          "latency_ms": 0.160275,
+          "latency_ms": 0.160398,
           "seq_len": 256
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.94721,
+          "latency_ms": 0.94895,
           "seq_len": 2048
         }
       ]
@@ -103,22 +103,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.16402,
+          "latency_ms": 0.164817,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.165659,
+          "latency_ms": 0.165991,
           "seq_len": 32
         },
         {
           "flops": 30064771072,
-          "latency_ms": 0.160365,
+          "latency_ms": 0.164915,
           "seq_len": 256
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.948609,
+          "latency_ms": 0.980912,
           "seq_len": 2048
         }
       ]
@@ -131,22 +131,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.191373,
+          "latency_ms": 0.191417,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.192462,
+          "latency_ms": 0.191663,
           "seq_len": 32
         },
         {
           "flops": 60129542144,
-          "latency_ms": 0.274727,
+          "latency_ms": 0.275107,
           "seq_len": 512
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.896417,
+          "latency_ms": 0.885984,
           "seq_len": 2048
         }
       ]
@@ -159,22 +159,22 @@
       "calibration_points": [
         {
           "flops": 1879048192,
-          "latency_ms": 0.191525,
+          "latency_ms": 0.191588,
           "seq_len": 16
         },
         {
           "flops": 3758096384,
-          "latency_ms": 0.191511,
+          "latency_ms": 0.192121,
           "seq_len": 32
         },
         {
           "flops": 60129542144,
-          "latency_ms": 0.274915,
+          "latency_ms": 0.278284,
           "seq_len": 512
         },
         {
           "flops": 240518168576,
-          "latency_ms": 0.897818,
+          "latency_ms": 0.898971,
           "seq_len": 2048
         }
       ]
@@ -187,27 +187,27 @@
       "calibration_points": [
         {
           "flops": 4194304,
-          "latency_ms": 0.120997,
+          "latency_ms": 0.12394,
           "seq_len": 16
         },
         {
           "flops": 16777216,
-          "latency_ms": 0.121923,
+          "latency_ms": 0.12232,
           "seq_len": 32
         },
         {
           "flops": 67108864,
-          "latency_ms": 0.05676,
+          "latency_ms": 0.05773,
           "seq_len": 64
         },
         {
-          "flops": 1073741824,
-          "latency_ms": 0.057109,
-          "seq_len": 256
+          "flops": 268435456,
+          "latency_ms": 0.057248,
+          "seq_len": 128
         },
         {
           "flops": 68719476736,
-          "latency_ms": 0.920638,
+          "latency_ms": 0.921396,
           "seq_len": 2048
         }
       ]
@@ -220,32 +220,32 @@
       "calibration_points": [
         {
           "flops": 4194304,
-          "latency_ms": 0.123889,
+          "latency_ms": 0.124682,
           "seq_len": 16
         },
         {
           "flops": 16777216,
-          "latency_ms": 0.122984,
+          "latency_ms": 0.1243,
           "seq_len": 32
         },
         {
           "flops": 67108864,
-          "latency_ms": 0.057903,
+          "latency_ms": 0.058211,
           "seq_len": 64
         },
         {
           "flops": 268435456,
-          "latency_ms": 0.057167,
+          "latency_ms": 0.058148,
           "seq_len": 128
         },
         {
           "flops": 4294967296,
-          "latency_ms": 0.089987,
+          "latency_ms": 0.090103,
           "seq_len": 512
         },
         {
           "flops": 68719476736,
-          "latency_ms": 0.933655,
+          "latency_ms": 0.920724,
           "seq_len": 2048
         }
       ]
@@ -258,12 +258,12 @@
       "calibration_points": [
         {
           "flops": 536870912,
-          "latency_ms": 0.031129,
+          "latency_ms": 0.0311,
           "seq_len": 16
         },
         {
           "flops": 1073741824,
-          "latency_ms": 0.032811,
+          "latency_ms": 0.032934,
           "seq_len": 32
         }
       ]
@@ -276,12 +276,12 @@
       "calibration_points": [
         {
           "flops": 536870912,
-          "latency_ms": 0.031294,
+          "latency_ms": 0.031037,
           "seq_len": 16
         },
         {
           "flops": 1073741824,
-          "latency_ms": 0.032901,
+          "latency_ms": 0.033043,
           "seq_len": 32
         }
       ]
